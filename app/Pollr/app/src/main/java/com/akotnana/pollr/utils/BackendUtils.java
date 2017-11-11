@@ -2,6 +2,7 @@ package com.akotnana.pollr.utils;
 
 
 import android.content.Context;
+import android.util.Log;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -18,6 +19,8 @@ import java.util.Map;
 
 public class BackendUtils {
 
+    public static String TAG = "BackendUtils";
+
     private static String IP = "http://10.199.25.174";
     private static int PORT = 5000;
     private static String result = "";
@@ -31,6 +34,7 @@ public class BackendUtils {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+                        Log.d(TAG, "received callback");
                         callback.onSuccess(response);
                     }
                 },
@@ -50,6 +54,7 @@ public class BackendUtils {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+                        Log.d(TAG, "received callback");
                         callback.onSuccess(response);
                     }
                 }, new Response.ErrorListener() {
