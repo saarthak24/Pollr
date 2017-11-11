@@ -11,6 +11,7 @@ def my_form_post():
 	password = request.form['password']
 	if username == "admin" and password == "admin":
 		return render_template("dashboard.html")
+	return render_template("index.html")
 
 if __name__ == "__main__":
 	app.run(debug = True)
