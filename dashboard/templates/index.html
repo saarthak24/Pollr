@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Pollr</title>
+    <title>Sign In</title>
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='index.css') }}">
     <script
       src="https://code.jquery.com/jquery-3.2.1.js"
       integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
-      crossorigin="anonymous">  
+      crossorigin="anonymous">
     </script>
     <script src="{{url_for('static', filename='form.js')}}"></script>
 </head>
 <body>
   <div class="login-page">
     <div class="form">
+    <img src="{{ url_for('static',filename='img/Logo.png') }}" alt="Logo" class="logo">
       <h1>Pollr</h1>
       <form class="login-form" action="." method="post">
-        <input type="text" name = "username" placeholder="username"/>
-        <input type="password" name = "password" placeholder="password"/>
+        <input type="text" name = "username" placeholder="Username"/>
+        <input type="password" name = "password" placeholder="Password"/>
         <button>login</button>
+        <p>Don't have an account? <span><b><a href="">Sign Up</a></b></span></p>
       </form>
     </div>
   </div>
