@@ -9,6 +9,7 @@
   position: relative;
   z-index: 1;
   background: #FFFFFF;
+  max-height: 80%;
   max-width: 25em;
   padding: 2em;
   text-align: center;
