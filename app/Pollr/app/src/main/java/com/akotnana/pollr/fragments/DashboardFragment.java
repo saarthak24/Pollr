@@ -22,6 +22,8 @@ import com.akotnana.pollr.utils.RVAdapter;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
@@ -133,7 +135,11 @@ public class DashboardFragment extends Fragment {
                                         new Runnable() {
                                             public void run() {
                                                 Log.d(TAG, "refreshing everything");
-                                                initializeData(output);
+                                                try {
+                                                    initializeData(output);
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
                                                 initializeAdapter();
                                                 swipeContainer.setRefreshing(false);
                                             }
@@ -171,7 +177,7 @@ public class DashboardFragment extends Fragment {
         return v;
     }
 
-    private void initializeData(String input) {
+    private void initializeData(String input) throws JSONException {
         Log.d(TAG, input);
         if(input.equals("")) {
             swipeContainer.setVisibility(View.GONE);
@@ -181,9 +187,32 @@ public class DashboardFragment extends Fragment {
             mEmptyText.setVisibility(View.GONE);
             //parse input and add to polls
             //TEMP
-            polls.add(new Poll("Saarthak Sethi", "Should everybody who does Hackital 2017 literally kms cause I'm a brick?", "Slide Scale", 129));
-            polls.add(new Poll("Rahul Rajan", "Why do I even work on backend? I suck balls.c.", "Multiple Choice", 130));
-            polls.add(new Poll("Sachin Jain", "I like to play smash without actually working on the frontend!", "Multiple Choice", 130));
+            JSONArray jsonarray = null;
+            try {
+                jsonarray = new JSONArray(input);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            for (int i = 0; i < jsonarray.length(); i++) {
+                JSONObject jsonobject = null;
+                try {
+                    jsonobject = jsonarray.getJSONObject(i);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                String id = "";
+                String question = "";
+                String type = "";
+
+                try {
+                    id = jsonobject.getString("id");
+                    question = jsonobject.getString("question");
+                    type = jsonobject.getString("type");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                polls.add(new Poll(question, type, id));
+            }
         }
     }
 

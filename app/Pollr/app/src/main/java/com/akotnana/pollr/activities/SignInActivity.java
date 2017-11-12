@@ -73,6 +73,7 @@ public class SignInActivity extends AppCompatActivity {
                             progressDialog.dismiss();
                         } else {
                             new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
+                            Log.d("AUTH_TOKEN", result);
                             onLoginSuccess();
                             progressDialog.dismiss();
                         }

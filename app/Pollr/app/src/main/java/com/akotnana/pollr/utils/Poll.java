@@ -5,27 +5,25 @@ package com.akotnana.pollr.utils;
  */
 
 public class Poll {
-    String politician;
     String question;
     String pollType;
-    int pollID;
+    String pollID;
 
-    public Poll(String pol, String question, String pollType, int id) {
-        this.politician = pol;
+    public Poll(String question, String pollType, String id) {
         this.question = question;
         this.pollID = id;
         this.pollType = pollType;
     }
 
-    public String getPolitician() {
-        return this.politician;
-    }
 
     public String getFullQuestion() {
         return this.question;
     }
 
     public String getShortQuestion() {
+        if(this.question.length() < 30) {
+            return this.question;
+        }
         return this.question.substring(0, 30) + "...";
     }
 
@@ -33,7 +31,7 @@ public class Poll {
         return pollType;
     }
 
-    public int getPollID() {
+    public String getPollID() {
         return pollID;
     }
 }

@@ -28,20 +28,8 @@
             android:textSize="19sp"
             />
 
-        <TextView
-            android:layout_below="@id/poll_short_question"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:id="@+id/politician_name"
-            android:textStyle="italic"
-            android:layout_alignParentLeft="true"
-            android:text="from John Doe"
-            android:textSize="14sp"
-            />
 
         <TextView
-            android:layout_toRightOf="@id/politician_name"
             android:layout_below="@id/poll_short_question"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
