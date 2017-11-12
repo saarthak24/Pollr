@@ -7,6 +7,10 @@
             android:checked="true"
             android:title="Polls" />
         <item
+            android:id="@+id/responses_fragment"
+            android:icon="@drawable/ic_check_circle_white_24dp"
+            android:title="Responses" />
+        <item
             android:id="@+id/profile_fragment"
             android:icon="@drawable/ic_person_white_24dp"
             android:title="Profile" />

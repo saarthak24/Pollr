@@ -27,12 +27,16 @@ import android.util.Log;
 
 import com.akotnana.pollr.R;
 import com.akotnana.pollr.activities.MainActivity;
+import com.akotnana.pollr.activities.PollAnswerActivity;
 import com.firebase.jobdispatcher.Constraint;
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
 import com.firebase.jobdispatcher.GooglePlayDriver;
 import com.firebase.jobdispatcher.Job;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+
+import java.util.Arrays;
+import java.util.Map;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
@@ -53,18 +57,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // is in the foreground. When the app is in the background an automatically generated notification is displayed.
         // When the user taps on the notification they are returned to the app. Messages containing both notification
         // and data payloads are treated as notification messages. The Firebase console always sends notification
-        // messages. For more see: https://firebase.google.com/docs/cloud-messaging/concept-options
-        // [END_EXCLUDE]
-
-        // TODO(developer): Handle FCM messages here.
-        // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
-        Log.d(TAG, "From: " + remoteMessage.getFrom());
-
 
         // Check if message contains a notification payload.
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
-            sendNotification(remoteMessage.getNotification().getBody());
+            String bad = "You just logged your ass in!";
+            if(!remoteMessage.getNotification().getBody().contains(bad)) {
+                String[] message = remoteMessage.getNotification().getBody().toString().split(",");
+                Log.d(TAG, Arrays.toString(message));
+                sendNotification(message);
+            }
         }
 
         // Also if you intend on generating your own notifications as a result of a received FCM
@@ -73,19 +75,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     // [END receive_message]
 
     /**
-     * Handle time allotted to BroadcastReceivers.
-     */
-    private void handleNow() {
-        Log.d(TAG, "Short lived task is done.");
-    }
-
-    /**
      * Create and show a simple notification containing the received FCM message.
      *
      * @param messageBody FCM message body received.
      */
-    private void sendNotification(String messageBody) {
-        Intent intent = new Intent(this, MainActivity.class);
+    private void sendNotification(String[] messageBody) {
+        Intent intent = new Intent(this, PollAnswerActivity.class);
+        intent.putExtra("id", messageBody[1]);
+        intent.putExtra("question", messageBody[2]);
+        intent.putExtra("type", messageBody[3]);
+        intent.putExtra("fromNotification", "1");
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
@@ -93,9 +92,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.ic_notifications_white_24dp)
-                        .setContentTitle("FCM Message")
-                        .setContentText(messageBody)
+                        .setSmallIcon(R.drawable.temp2)
+                        .setContentTitle("Update!")
+                        .setContentText(messageBody[0])
                         .setAutoCancel(true)
                         .setSound(defaultSoundUri)
                         .setContentIntent(pendingIntent);

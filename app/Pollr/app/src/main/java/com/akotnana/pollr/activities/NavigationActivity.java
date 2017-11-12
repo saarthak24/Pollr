@@ -24,8 +24,9 @@ import android.widget.Toast;
 import com.akotnana.pollr.R;
 import com.akotnana.pollr.fragments.DashboardFragment;
 import com.akotnana.pollr.fragments.ProfileFragment;
+import com.akotnana.pollr.fragments.ResponseFragment;
 
-public class NavigationActivity extends AppCompatActivity implements DashboardFragment.OnFragmentInteractionListener, ProfileFragment.OnFragmentInteractionListener {
+public class NavigationActivity extends AppCompatActivity implements ResponseFragment.OnFragmentInteractionListener, DashboardFragment.OnFragmentInteractionListener, ProfileFragment.OnFragmentInteractionListener {
 
     private DrawerLayout mDrawer;
     private Toolbar toolbar;
@@ -96,15 +97,24 @@ public class NavigationActivity extends AppCompatActivity implements DashboardFr
         switch(menuItem.getItemId()) {
             case R.id.dashboard_fragment:
                 fragmentClass = DashboardFragment.class;
+                Log.d("Navigation", "regular");
+                break;
+            case R.id.responses_fragment:
+                fragmentClass = ResponseFragment.class;
+                Log.d("Navigation", "clear");
                 break;
             case R.id.profile_fragment:
                 fragmentClass = ProfileFragment.class;
+                Log.d("Navigation", "clear");
                 break;
             case R.id.sign_out:
                 //TODO: Log off firebase
                 mDrawer.closeDrawers();
                 Toast.makeText(this, "Logging off...",
                         Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(getApplicationContext(), SignInActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
                 return;
         }
 
@@ -146,6 +156,8 @@ public class NavigationActivity extends AppCompatActivity implements DashboardFr
             toolbarTitle.setText(menuItem.getTitle());
             // Close the navigation drawer
             mDrawer.closeDrawers();
+
+
         }
     }
 
@@ -191,8 +203,13 @@ public class NavigationActivity extends AppCompatActivity implements DashboardFr
             CharSequence i = toolbarTitle.getText();
             if (i.equals("Polls")) {
                 toCheck = 0;
+                Log.d("Navigation", "regular");
+
 
             } else if (i.equals("Profile")) {
+                Log.d("Navigation", "clear");
+
+
                 toCheck = 1;
 
             }
