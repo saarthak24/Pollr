@@ -6,7 +6,17 @@ $.ajax({
         if (JSON.parse(data.responseText) != null) {
         pollIDs = JSON.parse(data.responseText)
         for (index = 0; index < pollIDs.length; ++index) {
-            $("#myDropdown").append('<a href="#" id=' + pollIDs[index] + '>Test</a>') //NEED TO FINISH
+            $.ajax({
+                type: "POST",
+                url: '/ppollinfo',
+                data: {
+                    'poll_id': pollIDs[index]
+                },
+                complete: function(data) {
+                    console.log(data)
+                }
+            });
+            $("#myDropdown").append('<a href="#" id=' + pollIDs[index] + '>'+'Test'+'</a>') //NEED TO FINISH
         }
         $("#chart").height('0em');
     }
@@ -38,13 +48,6 @@ window.onclick = function(event) {
 }
 
 function pPopulate(pollID) {
-    $.ajax({
-        type: "GET",
-        url: '/ppollinfo',
-        complete: function(data) {
-            console.log(data)
-        }
-    });
     //AJAX GET REQUEST TO GET STUFF
     $("#pTitle").val("")
     $("#pType").val("")

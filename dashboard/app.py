@@ -70,7 +70,7 @@ def createpoll():
 		choices = json.dumps(choices).replace('"','')
 		print(choices, file = sys.stderr)
 
-		
+
 		demographic = request.form['demographics']
 		filter_ = None
 		if demographic == 'age':
@@ -110,10 +110,10 @@ def ppolls():
     return r.text
 
 
-@app.route("/ppollinfo", methods=["GET"])
+@app.route("/ppollinfo", methods=["POST"])
 def ppollinfo():
 	session = request.cookies.get('session_id')
-	poll_id = request.args.get('poll_id')
+	poll_id = request.form['poll_id']
 	data = {
         'poll_id': poll_id,
 		'session_id': session
