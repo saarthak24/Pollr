@@ -88,7 +88,7 @@
   color: #EF3B3A;
 }
 body {
-  background-image: url("img/Background.png");
+  background-image: url("../img/Background.png");
   background-size: cover;
   font-family: "Roboto", sans-serif;
   -webkit-font-smoothing: antialiased;

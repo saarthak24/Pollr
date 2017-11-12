@@ -3,10 +3,9 @@
 
     <head>
         <title>Sign In</title>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='index.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/index.css') }}">
         <script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous">
         </script>
-        <script src="{{url_for('static', filename='form.js')}}"></script>
     </head>
 
     <body>
@@ -14,21 +13,26 @@
             <div class="form">
                 <img src="{{ url_for('static',filename='img/Logo.png') }}" alt="Logo" class="logo">
                 <h1>Pollr</h1>
-                <form class="login-form" action="/dashboard" method="post">
+                <form class="login-form" id="login-form" action="/dashboard" method="post">
                     <input type="text" name="username" placeholder="Username" />
                     <input type="password" name="password" placeholder="Password" />
-                    <button>login</button>
+                    <button>Sign In</button>
                     <p class="message">Don't have an account? <span><b><a href="#">Sign Up</a></b></span></p>
                 </form>
-                <form class="register-form" action="/register">
-                    <input type="text" placeholder="Username" />
-                    <input type="password" placeholder="Password" />
-                    <input type="password" placeholder="Confirm Password" />
+                <form class="register-form" id="register-form" action="javascript:register()">
+                    <input type="text" name="fullName" placeholder="Full Name" id="fullName"/>
+                    <input type="email" name="email" placeholder="Email" id="email"/>
+                    <input type="text" name="username" placeholder="Username" id="username"/>
+                    <input type="number" name="zip" placeholder="ZIP Code" id="zip"/>
+                    <input type="password" name="username" placeholder="Password" id="password"/>
+                    <input type="password" placeholder="Confirm Password" id="confirmPassword"/>
                     <button type="submit">register</button>
-                    <p class="message">Not registered? <a href="#">Create an account</a></p>
+                    <p class="message">Already registered? <a href="#">Sign In</a></p>
                 </form>
             </div>
         </div>
     </body>
+
+            <script src="{{url_for('static', filename='js/form.js')}}"></script>
 
 </html>
