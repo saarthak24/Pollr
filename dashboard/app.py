@@ -20,7 +20,7 @@ def my_form_post():
 	r = requests.post('http://10.199.25.174:5000/api/v1/plogin', data = data)
 	print(r.text, file=sys.stderr)
 
-	if username == "admin" and password == "admin":
+	if r.text == "True":
 		resp = make_response(render_template("dashboard.html"))
 		resp.set_cookie('username', username)
 		return resp

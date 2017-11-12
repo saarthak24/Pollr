@@ -4,6 +4,7 @@ from tweepy import OAuthHandler
 from textblob import TextBlob
 from rake_nltk import Rake
 import math
+import zipcode
 
 commonwords = ['the', 'of', 'and', 'a', 'to', 'in', 'is', 'that', 'it', 'he', 'was',
                'you', 'for', 'on', 'are', 'as', 'with', 'his', 'they', 'at', 'be',
@@ -175,12 +176,16 @@ def words(text):
     return final
  
 if __name__ == "__main__":
-    geocode = "51.5033640,-0.1276250,150mi"
-    text = "where is the coolest place in the world?"
+    myzip = zipcode.isequal('44102')
+    geocode = str(myzip.lat) + "," + str(myzip.lon) + ",150mi"
+    text = """Stephen Curry once again used his platform to make his voice heard on Saturday, penning an entry in The Players' Tribune on Colin Kaepernick, Veterans Day, respect for the military, and the time President Trump tweeted that he had rescinded his White House invitation to Curry and the NBA champion Golden State Warriors shortly after Curry and teammates reiterated their stance that they didn't want to go."""
     json = {}
     data = []
     for word in words(text):
-        data.append(main(word, geocode, 1, 5))
+        try:
+            data.append(main(word, geocode, 1, 500))
+        except ZeroDivisionError as e:
+            continue
     json['num_words'] = len(data)
     json['words'] = data
     print(json)
