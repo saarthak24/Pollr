@@ -14,7 +14,7 @@ def my_form_post():
 	username = request.form['username']
 	password = request.form['password']
 	data = {
-		'username': username, 
+		'username': username,
 		'password': hashlib.md5((password + "pollr").encode("utf-8")).hexdigest()
 	}
 	r = requests.post('http://10.199.25.174:5000/api/v1/plogin', data = data)
@@ -26,14 +26,22 @@ def my_form_post():
 		return resp
 	return render_template("index.html")
 
-# @app.route("/register", methods = ["POST"])
-# def my_form_register():
-# 	name = request.form['name']
-# 	username = request.form['username']
-# 	password = request.form['password']
-# 	geocode = request.form['geocode']
-# 	request("http://10.199.25.174:5000/api/v1/pregister")
-# 	return render_template("dashboard.html")
+@app.route("/register", methods = ["POST"])
+def my_form_register():
+	name = request.form['fullName']
+	email = request.form['email']
+	username = request.form['username']
+	password = request.form['password']
+	zipCode = request.form['zip']
+	data = {
+		'name': name,
+		'email': email,
+		'username': username,
+		'password': hashlib.md5((password + "pollr").encode("utf-8")).hexdigest(),
+		'zip': zipCode
+	}
+	r = requests.post('http://10.199.25.174:5000/api/v1/pregister', data = data)
+	return render_template("dashboard.html")
 
 @app.route("/logout")
 def logout():
