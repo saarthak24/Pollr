@@ -24,7 +24,6 @@ import android.widget.Toast;
 import com.akotnana.pollr.R;
 import com.akotnana.pollr.fragments.DashboardFragment;
 import com.akotnana.pollr.fragments.ProfileFragment;
-import com.google.android.gms.maps.model.Dash;
 
 public class NavigationActivity extends AppCompatActivity implements DashboardFragment.OnFragmentInteractionListener, ProfileFragment.OnFragmentInteractionListener {
 

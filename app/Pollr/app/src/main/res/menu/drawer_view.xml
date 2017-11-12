@@ -3,16 +3,16 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/dashboard_fragment"
-            android:icon="@drawable/ic_view_list_black_24dp"
+            android:icon="@drawable/ic_view_list_white_24dp"
             android:checked="true"
             android:title="Polls" />
         <item
             android:id="@+id/profile_fragment"
-            android:icon="@drawable/ic_person_black_24dp"
+            android:icon="@drawable/ic_person_white_24dp"
             android:title="Profile" />
         <item
             android:id="@+id/sign_out"
-            android:icon="@drawable/ic_power_settings_new_black_24dp"
+            android:icon="@drawable/ic_power_settings_new_white_24dp"
             android:title="Sign Out" />
     </group>
 </menu>
