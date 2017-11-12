@@ -127,15 +127,19 @@ def user():
 	username = request.cookies.get('username')
 	session_id = request.cookies.get('session_id')
 	data = {
-		'session_id': session_id
+		"session_id": session_id
 	}
 	r = requests.post('http://10.199.25.174:5000/api/v1/puserinfo', data = data)
 	print(r.text, file=sys.stderr)
-	resp = json.loads(r.text)
-	name = resp['name']
-	zipcode = resp['zip']
 
-	return render_template("user.html", name = name, zipcode = zipcode)
+	# name = r.text[r.text.index('"name"'):].split(',')[0].split('"')
+	# zipcode = r.text[r.text.index('"zip"'):].split(',')[0].split('"')
+	# print(name + "\n")
+
+	# name = resp["name"]
+	# zipcode = resp["zip"]
+
+	return render_template("user.html", username = username)
 
 
 @app.route("/logout")
