@@ -1,25 +1,34 @@
 var pollIDs;
+var polls = []
 $.ajax({
     type: "POST",
     url: '/ppolls',
     complete: function(data) {
         if (JSON.parse(data.responseText) != null) {
             pollIDs = JSON.parse(data.responseText)
-            for (index = 0; index < pollIDs.length; ++index) {
+            console.log(pollIDs)
+            for (var index = 0; index < pollIDs.length; index++) {
                 $.ajax({
                     type: "POST",
                     url: '/ppollinfo',
+                    async: false,
                     data: {
                         'poll_id': pollIDs[index]
                     },
                     complete: function(data) {
                         console.log(data)
+                        $("#myDropdown").append('<a href="#" id=' + pollIDs[index] + '>' + JSON.parse(data.responseText).df.question + '</a>')
+                        polls.push({
+                            data: JSON.parse(data.responseText),
+                            pollID: pollIDs[index]
+                        })
+                        console.log(index)
                     }
                 });
-                $("#myDropdown").append('<a href="#" id=' + pollIDs[index] + '>' + 'Test' + '</a>') //NEED TO FINISH
             }
         }
         $("#chart").height('0em');
+        console.log(polls)
     }
 });
 
@@ -48,47 +57,57 @@ window.onclick = function(event) {
 }
 
 function pPopulate(pollID) {
-    //AJAX GET REQUEST TO GET STUFF
-    $("#pTitle").val("")
-    $("#pType").val("")
-    $("#chart").val("")
-    $("#demographic").val("")
-    $("#stats").val("")
-    $("#pTitle").val("Chart Title")
-    $("#demographic").val("Gender - Male")
-    $("#stats").val("477 Responses")
+    var pollData;
+    var slider = 0;
+    var responses = [];
+    for (i = 0; i < polls.length; i++) {
+        if (polls[i].pollID == pollID) {
+            console.log(polls[i].data)
+            pollData = polls[i].data
+        }
+    }
+    for (i = 0; i < pollData.df.choices.length; i++) {
+        if (pollData.df.choices[i] != null) {
+            slider = 1;
+        }
+    }
+    $("#pTitle").text("")
+    $("#pType").text("")
+    $("#chart").text("")
+    $("#demographic").text("")
+    $("#stats").text("")
+    $("#pTitle").text(pollData.df.question)
+    if (slider = 1) {
+        $("#pType").text("Slider")
+        responses = {
+            choice1: "Strongly Disagree",
+            count1: 0
+            choice2:"Disagree"
+            count2: 0
+            choice3:"Neutral"
+            count3: 0
+            choice4:"Agree"
+            count4: 0
+            choice5:"Strongly Agree"
+            count5: 0
+        }
+    } else {
+        $("#pType").text("Multiple Choice")
+    }
+    $("#demographic").text(pollData.df.dem.charAt(0).toUpperCase() + pollData.df.dem.slice(1) + " - " + pollData.df.filter.charAt(0).toUpperCase() + pollData.df.filter.slice(1) + " | Voting District - " + pollData.df.voting_district)
+    $("#stats").text(pollData.responses.length + " Responses")
     $("#chart").height('40em');
     AmCharts.makeChart("chart", {
         "type": "pie",
         "balloonText": "[[title]]<br><span style='font-size:14px'><b>[[value]]</b> ([[percents]]%)</span>",
-        "titleField": "choice",
-        "valueField": "votes",
+        "titleField": "answer",
+        "valueField": "length",
         "fontSize": 12,
         "theme": "default",
         "allLabels": [],
         "balloon": {},
         "titles": [],
         //"startDuration": 0,
-        "dataProvider": [{
-                "choice": "Czech Republic",
-                "votes": 356.9
-            },
-            {
-                "choice": "Ireland",
-                "votes": 131.1
-            },
-            {
-                "choice": "Germany",
-                "votes": 115.8
-            },
-            {
-                "choice": "Australia",
-                "votes": 109.9
-            },
-            {
-                "choice": "Austria",
-                "votes": 108.3
-            }
-        ]
+        "dataProvider": [pollData.responses]
     });
 }
