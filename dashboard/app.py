@@ -32,6 +32,21 @@ def my_form_post():
 		return resp
 	return render_template("index.html")
 
+@app.route("/user")
+def user():
+	username = request.cookies.get('username')
+	session_id = request.cookies.get('session_id')
+	data = {
+		'session_id': session_id
+	}
+	r = requests.post('http://10.199.25.174:5000/api/v1/puserinfo', data = data)
+	print(r.text, file=sys.stderr)
+	resp = json.loads(r.text)
+	name = resp['name']
+	zipcode = resp['zip']
+
+	return render_template("user.html", name = name, zipcode = zipcode)
+
 @app.route("/register", methods = ["POST"])
 def my_form_register():
     name = request.form['fullName']
@@ -120,23 +135,6 @@ def ppollinfo():
     }
 	r = requests.post('http://10.199.25.174:5000/api/v1/ppollinfo', data=data)
 	return r.text
-
-
-@app.route("/user")
-def user():
-	username = request.cookies.get('username')
-	session_id = request.cookies.get('session_id')
-	data = {
-		'session_id': session_id
-	}
-	r = requests.post('http://10.199.25.174:5000/api/v1/puserinfo', data = data)
-	print(r.text, file=sys.stderr)
-	resp = json.loads(r.text)
-	name = resp['name']
-	zipcode = resp['zip']
-
-	return render_template("user.html", name = name, zipcode = zipcode)
-
 
 @app.route("/logout")
 def logout():

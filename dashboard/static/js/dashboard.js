@@ -5,22 +5,22 @@ $.ajax({
     complete: function(data) {
         if (JSON.parse(data.responseText) != null) {
         pollIDs = JSON.parse(data.responseText)
-        for (index = 0; index < pollIDs.length; ++index) {
-            $.ajax({
-                type: "POST",
-                url: '/ppollinfo',
-                data: {
-                    'poll_id': pollIDs[index]
-                },
-                complete: function(data) {
-                    console.log(data)
-                }
-            });
-            $("#myDropdown").append('<a href="#" id=' + pollIDs[index] + '>'+'Test'+'</a>') //NEED TO FINISH
         }
         $("#chart").height('0em');
     }
 }
+for (index = 0; index < pollIDs.length; ++index) {
+    $.ajax({
+        type: "POST",
+        url: '/ppollinfo',
+        data: {
+            'poll_id': pollIDs[index]
+        },
+        complete: function(data) {
+            console.log(data)
+        }
+    });
+    $("#myDropdown").append('<a href="#" id=' + pollIDs[index] + '>'+'Test'+'</a>') //NEED TO FINISH
 });
 
 /* When the user clicks on the button,
