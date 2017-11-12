@@ -19,10 +19,10 @@ public class Response {
     }
 
     public String getShortQuestion() {
-        if(this.question.length() < 30) {
+        if(this.question.length() < 60) {
             return this.question;
         }
-        return this.question.substring(0, 30) + "...";
+        return this.question.substring(0, 60) + "...";
     }
 
     public String getAnswer() {

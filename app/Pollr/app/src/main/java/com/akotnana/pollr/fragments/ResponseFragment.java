@@ -87,10 +87,10 @@ public class ResponseFragment extends Fragment {
                                             }
                                         });
 
-                                /*
+
                                 Log.d(TAG, "Retrieving");
                                 String gg = "";
-                                BackendUtils.doGetRequest("/api/v1/dashboard", new HashMap<String, String>() {{
+                                BackendUtils.doGetRequest("/api/v1/responses", new HashMap<String, String>() {{
                                     put("auth_token", new DataStorage(getContext()).getData("auth_token"));
                                 }}, new VolleyCallback() {
                                     @Override
@@ -131,7 +131,7 @@ public class ResponseFragment extends Fragment {
                                         e.printStackTrace();
                                     }
                                 }
-                                */
+
 
                                 getActivity().runOnUiThread(
                                         new Runnable() {
