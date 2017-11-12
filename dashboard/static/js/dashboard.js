@@ -59,7 +59,6 @@ window.onclick = function(event) {
 function pPopulate(pollID) {
     var pollData;
     var slider = 0;
-    var responses = [];
     for (i = 0; i < polls.length; i++) {
         if (polls[i].pollID == pollID) {
             console.log(polls[i].data)
@@ -77,23 +76,10 @@ function pPopulate(pollID) {
     $("#demographic").text("")
     $("#stats").text("")
     $("#pTitle").text(pollData.df.question)
-    if (slider = 1) {
+    if(slider == 1)
         $("#pType").text("Slider")
-        responses = {
-            choice1: "Strongly Disagree",
-            count1: 0
-            choice2:"Disagree"
-            count2: 0
-            choice3:"Neutral"
-            count3: 0
-            choice4:"Agree"
-            count4: 0
-            choice5:"Strongly Agree"
-            count5: 0
-        }
-    } else {
+    else
         $("#pType").text("Multiple Choice")
-    }
     $("#demographic").text(pollData.df.dem.charAt(0).toUpperCase() + pollData.df.dem.slice(1) + " - " + pollData.df.filter.charAt(0).toUpperCase() + pollData.df.filter.slice(1) + " | Voting District - " + pollData.df.voting_district)
     $("#stats").text(pollData.responses.length + " Responses")
     $("#chart").height('40em');
