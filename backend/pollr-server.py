@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, json
 from pyfcm import FCMNotification
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 import pymongo
 import hashlib
 
@@ -57,12 +58,12 @@ def login():
 
         print(user_match["password"],user_login["password"])
         if(user_match["password"] == user_login["password"]):
-            hash_f = hashlib.md5((str(user_match["firebase_id"]) +  str(user_match["username"])+ "pollr").encode("utf-8"))
+            # hash_f = hashlib.md5((str(user_match["firebase_id"]) +  str(user_match["username"])+ "pollr").encode("utf-8"))
             registration_id = user_match["firebase_id"]
             message_title = "Update!"
             message_body = "Hey " + user_match["username"] + "! You just logged your ass in!"
             result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
-            return hash_f.hexdigest()
+            return user_match["hash_f"]
 
         return "Fail"
 @app.route('/api/v1/pregister', methods=('GET', 'POST'))
@@ -119,7 +120,7 @@ def plogin():
             db.politicians.update({"username" : user_login["username"]},{"$set":{"session_id" : sess_id}})
             return sess_id
 
-        return "False"
+        return "Fail"
 @app.route('/api/v1/user_profile', methods=['POST'])
 def user_profile():
 
@@ -132,12 +133,12 @@ def user_profile():
             return "auth failed"
         username = user_match["username"]
         db.usrs.update({"username":username},{"$set":{
-            "gender" : user_info["gender"],
-            "age" : user_info["age"],
-            "district" : user_info["district"],
-            "income" : user_info["income"],
-            "race" : user_info["race"],
-            "name" : user_info["name"]
+            "gender" : user_info["gender"].lower(),
+            "age" : user_info["age"].lower(),
+            "district" : user_info["district"].lower(),
+            "income" : user_info["income"].lower(),
+            "race" : user_info["race"].lower(),
+            "name" : user_info["name"].lower()
         }})
         return "Success!"
 #
@@ -153,29 +154,117 @@ def user_profile():
 
         # print(jsonify(str(request.data.decode('utf-8'))).replace("\"",""))
         # return request.form["username"]
-# @app.route('/api/v1/dashboard', methods=['POST'])
-# def dashboard():
-#
+@app.route('/api/v1/dashboard', methods=['GET'])
+def dashboard():
+    if request.method == 'GET':
+        sess_token = request.args.get("auth_token")
+        ids = db.usrs.find_one({"hash_f": sess_token})["polls"]
+        print("dashboard", ids)
+        rese = []
+        for i in ids:
+            pl = db.polls.find_one({"_id": i})
+            rese.append({"question":pl["question"], "id": str(i), "type": pl["type"]})
+    return jsonify(rese)
+@app.route('/api/v1/getpoll',methods=['GET'])
+def getpoll():
+    if request.method == 'GET':
+        sess_token = request.args.get("auth_token")
+        _id = request.args.get("poll_id")
+        print(_id)
+        pl = db.polls.find_one({"_id": ObjectId(_id)})
+        # return jsonify(pl)
+        pl["_id"] = str(ObjectId(_id))
+        return str(pl)
+    return "false"
+
+@app.route('/api/v1/answer',methods=['POST'])
+def answer():
+    if request.method == 'POST':
+        user_info = request.form.to_dict()
+        _id = user_info["poll_id"]
+        answer = user_info["answer"]
+        username = db.usrs.find_one({"hash_f":user_info["auth_token"]})["username"]
+        db.responses.insert_one({
+            "username": username,
+            "answer": answer,
+            "poll_id": str(_id)
+        })
+        print(db.usrs.find_one({"username":username})["polls"])
+        db.usrs.update({"username": username},{"$pull": {"polls":ObjectId(user_info["poll_id"])}})
+        print(db.usrs.find_one({"username":username})["polls"])
+        return "Success!"
+
+
+
 @app.route('/api/v1/pquestion', methods=['POST'])
 def pquestion():
     user_info = request.form.to_dict()
     if request.method == 'POST':
         #db.politicians.find({"session_id": user_info["session_id"]})
-        _id = db.polls.insert_one({
+        dd = db.polls.insert_one({
             "question": user_info["question"],
             "type": user_info["type"],
             "choices": user_info["choices"],
-            "voting_district": user_info["voting_district"],
+            "voting_district": user_info["district"],
             "demographic": user_info["demographic"],
             "filter": user_info["filter"]
         })
-        print(_id)
-        db.politicians.update({"session_id":user_info["session_id"]},{"$push":{"polls":_id}})
+        _id = dd.inserted_id
+        print("hellooooo")
+        print(str(_id))
+        db.politicians.update({"session_id":user_info["session_id"]},{"$push":{"polls":str(_id)}})
         rslts = db.usrs.update({
-            "district": user_info["voting_district"],
+            "district": user_info["district"],
             str(user_info["demographic"]): user_info["filter"],
         },{"$push":{"polls":_id}})
-        
+        for i in db.usrs.find({"polls":_id}):
+            notif = i["firebase_id"]
+            registration_id = notif
+            message_title = "Update!"
+            message_body = "Hey " + i["name"] + "! You have a new poll awaitting!," +  str(_id)
+            result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
+        return "success"
+
+@app.route('/api/v1/ppolls', methods=['POST'])
+def ppolls():
+    if request.method == 'POST':
+        user_info = request.form.to_dict()
+        rslts = db.politicians.find_one({"session_id": user_info["session_id"]})
+        if(rslts == None):
+            return "fail"
+        print(rslts['polls'])
+        return jsonify(rslts['polls'])
+@app.route('/api/v1/puserinfo', methods=['POST'])
+def puserinfo():
+    if request.method == 'POST':
+        user_info = request.form.to_dict()
+        rslt = db.politicians.find_one({"session_id": user_info["session_id"]})
+        # p = rslt["polls"]
+        # for i in range(0,len(p)):
+        #     p[i] = str(p[i])
+        for p in range(0,len(rslt["polls"])):
+            rslt["polls"][p] = str(ObjectId(rslt["polls"][p])) + ""
+            print(str(ObjectId(rslt["polls"][p])))
+
+        if(rslt is not None):
+            return jsonify(rslt)
+        return "fail"
+@app.route('/api/v1/ppollinfo',methods=['POST'])
+def ppollinfo():
+    if(request.method == 'POST'):
+        user_info = request.form.to_dict()
+        ses_id = user_info["session_id"]
+        pol_id = user_info["poll_id"]
+        print(pol_id)
+        print(ses_id)
+        # print(db.responses.find_one({"poll_id":ObjectId(str(user_info["poll_id"]))}))
+        # # username = db.usrs.find_one({"hash_f":user_info["session_id"]})["username"]
+        # p_info = db.polls.find_one({"_id": ObjectId(_id)})
+
+        respp = db.responses.find_one({"poll_id":user_info["poll_id"]})
+        print(respp)
+        respp["_id"] = pol_id
+        return jsonify(respp)
 
 if __name__ == '__main__':
 
