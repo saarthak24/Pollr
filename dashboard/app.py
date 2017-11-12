@@ -83,16 +83,17 @@ def ppolls():
     r = requests.post('http://10.199.25.174:5000/api/v1/ppolls', data=data)
     return r.text
 
+
 @app.route("/ppollinfo", methods=["GET"])
 def ppollinfo():
 	session = request.cookies.get('session_id')
-    poll_id = request.args.get('poll_id')
-    data = {
+	poll_id = request.args.get('poll_id')
+	data = {
         'poll_id': poll_id,
 		'session_id': session
     }
-    r = requests.post('http://10.199.25.174:5000/api/v1/ppollinfo', data=data)
-    return r.text
+	r = requests.post('http://10.199.25.174:5000/api/v1/ppollinfo', data=data)
+	return r.text
 
 
 @app.route("/user")
@@ -103,7 +104,7 @@ def user():
         'username': username,
         'session_id': session_id
     }
-    #r = requests.post()
+    # r = requests.post()
     return render_template("user.html")
 
 
