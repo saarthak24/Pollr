@@ -4,11 +4,12 @@ $.ajax({
     url: '/ppolls',
     complete: function(data) {
         if (JSON.parse(data.responseText) != null) {
-        pollIDs = JSON.parse(data.responseText)
+            pollIDs = JSON.parse(data.responseText)
+            console.log(pollIDs)
         }
         $("#chart").height('0em');
     }
-}
+});
 for (index = 0; index < pollIDs.length; ++index) {
     $.ajax({
         type: "POST",
@@ -20,8 +21,8 @@ for (index = 0; index < pollIDs.length; ++index) {
             console.log(data)
         }
     });
-    $("#myDropdown").append('<a href="#" id=' + pollIDs[index] + '>'+'Test'+'</a>') //NEED TO FINISH
-});
+    $("#myDropdown").append('<a href="#" id=' + pollIDs[index] + '>' + 'Test' + '</a>') //NEED TO FINISH
+}
 
 /* When the user clicks on the button,
 toggle between hiding and showing the dropdown content */
@@ -31,20 +32,20 @@ function myFunction() {
 
 // Close the dropdown menu if the user clicks outside of it
 window.onclick = function(event) {
-  if (!event.target.matches('.dropbtn')) {
-    var dropdowns = document.getElementsByClassName("dropdown-content");
-    var i;
-    for (i = 0; i < dropdowns.length; i++) {
-      var openDropdown = dropdowns[i];
-      if (openDropdown.classList.contains('show')) {
-        openDropdown.classList.remove('show');
-      }
-    }
-    if(pollIDs.includes(event.target.id)){
-        pPopulate(event.target.id)
-    }
+    if (!event.target.matches('.dropbtn')) {
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        var i;
+        for (i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+        if (pollIDs.includes(event.target.id)) {
+            pPopulate(event.target.id)
+        }
 
-  }
+    }
 }
 
 function pPopulate(pollID) {
