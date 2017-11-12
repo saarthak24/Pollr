@@ -136,6 +136,7 @@ def ppollinfo():
 	r = requests.post('http://10.199.25.174:5000/api/v1/ppollinfo', data=data)
 	return r.text
 
+<<<<<<< HEAD
 
 @app.route("/user")
 def user():
@@ -157,6 +158,8 @@ def user():
 	return render_template("user.html", username = username, rando = r.text)
 
 
+=======
+>>>>>>> 681c0e1891cbda8eb37cbb277569ce79e1ffb8ae
 @app.route("/logout")
 def logout():
     return render_template("index.html")
