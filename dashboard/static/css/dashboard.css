@@ -1,0 +1,7 @@
+#pollSelect {
+    width: 100%;
+    padding: 8px 15px;
+    cursor: pointer;
+    color: white;
+    background-color: red;
+}
