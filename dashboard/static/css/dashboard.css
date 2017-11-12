@@ -56,6 +56,10 @@ input {
     width: 20em;
 }
 
+input, select {
+    padding: 0.5em;
+}
+
 #createButton {
     background-color: #e62828;
     text-align: center;
@@ -70,4 +74,9 @@ input {
 
 #createButton:hover {
     background-color: #FF4A4A;
+}
+
+#demographics {
+    margin-bottom: 2em;
+    margin-top: 1em;
 }
