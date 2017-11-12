@@ -1,4 +1,7 @@
 from flask import Flask, render_template, request, make_response, redirect, url_for
+import requests
+import sys
+import hashlib
 
 app = Flask(__name__)
 
@@ -10,21 +13,27 @@ def index():
 def my_form_post():
 	username = request.form['username']
 	password = request.form['password']
+	data = {
+		'username': username, 
+		'password': hashlib.md5((password + "pollr").encode("utf-8")).hexdigest()
+	}
+	r = requests.post('http://10.199.25.174:5000/api/v1/plogin', data = data)
+	print(r.text, file=sys.stderr)
+
 	if username == "admin" and password == "admin":
 		resp = make_response(render_template("dashboard.html"))
 		resp.set_cookie('username', username)
 		return resp
 	return render_template("index.html")
 
-@app.route("/register", methods = ["POST"])
-def my_form_register():
-	username = request.form['username']
-	password = request.form['password']
-	if username == "admin" and password == "admin":
-		resp = make_response(render_template("dashboard.html"))
-		resp.set_cookie('username', username)
-		return resp
-	return render_template("index.html")
+# @app.route("/register", methods = ["POST"])
+# def my_form_register():
+# 	name = request.form['name']
+# 	username = request.form['username']
+# 	password = request.form['password']
+# 	geocode = request.form['geocode']
+# 	request("http://10.199.25.174:5000/api/v1/pregister")
+# 	return render_template("dashboard.html")
 
 @app.route("/logout")
 def logout():

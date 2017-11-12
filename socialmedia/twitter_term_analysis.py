@@ -176,11 +176,11 @@ def words(text):
  
 if __name__ == "__main__":
     geocode = "51.5033640,-0.1276250,150mi"
-    text = "Do you consider gun control to be a big problem in your community?"
+    text = "where is the coolest place in the world?"
     json = {}
     data = []
     for word in words(text):
-        data.append(main(word, geocode, 5, 500))
+        data.append(main(word, geocode, 1, 5))
     json['num_words'] = len(data)
     json['words'] = data
     print(json)
