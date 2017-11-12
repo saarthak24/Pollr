@@ -28,7 +28,7 @@ public class BackendUtils {
     public static void doGetRequest(String address, Map<String, String> parameters, final VolleyCallback callback, Context context) {
         String request = IP + ":" + String.valueOf(PORT) + address + "?";
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
-            request += entry.getKey() + "=" + entry.getValue();
+            request += entry.getKey() + "=" + entry.getValue() + "&";
         }
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, request,

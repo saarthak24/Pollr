@@ -158,6 +158,11 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
         join.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (!validate()) {
+                    onSignUpFailed();
+                    return;
+                }
+                join.setEnabled(false);
                 final ProgressDialog progressDialog = new ProgressDialog(ProfileEditActivity.this,
                         R.style.AppTheme_Dark_Dialog);
                 progressDialog.setIndeterminate(true);
@@ -174,7 +179,7 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
                 }}, new VolleyCallback() {
                     @Override
                     public void onSuccess(String result) {
-                        new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
+                        //new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
                         onSignUpSuccess();
                         progressDialog.dismiss();
                     }

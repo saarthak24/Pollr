@@ -4,7 +4,6 @@ package com.akotnana.pollr.fragments;
 import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -19,8 +18,8 @@ import android.widget.TextView;
 import com.akotnana.pollr.R;
 import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.DataStorage;
-import com.akotnana.pollr.utils.Poll;
-import com.akotnana.pollr.utils.RVAdapter;
+import com.akotnana.pollr.utils.Response;
+import com.akotnana.pollr.utils.RVAdapterResponse;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
 
@@ -33,33 +32,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static android.view.View.GONE;
-
 /**
  * Created by anees on 11/12/2017.
  */
 
-public class DashboardFragment extends Fragment {
+public class ResponseFragment extends Fragment {
 
     public static boolean submitted = false;
 
-    public String TAG = "DashboardFragment";
+    public String TAG = "ResponseFragment";
 
     private SwipeRefreshLayout swipeContainer;
-    private List<Poll> polls = new ArrayList<Poll>();
+    private List<Response> responses = new ArrayList<Response>();
     private static RecyclerView rv;
-    private static RVAdapter adapter;
+    private static RVAdapterResponse adapter;
     private String output = "";
 
     private SwipeRefreshLayout.OnRefreshListener swipeRefreshListner;
 
     private OnFragmentInteractionListener mListener;
 
-    private TextView mEmptyText;
-
     private Snackbar errorSnack;
 
-    public DashboardFragment() {
+    public ResponseFragment() {
         // Required empty public constructor
     }
 
@@ -73,7 +68,7 @@ public class DashboardFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_dashboard, container, false);
+        View v = inflater.inflate(R.layout.fragment_response, container, false);
 
         swipeContainer = (SwipeRefreshLayout) v.findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
@@ -92,7 +87,7 @@ public class DashboardFragment extends Fragment {
                                             }
                                         });
 
-
+                                /*
                                 Log.d(TAG, "Retrieving");
                                 String gg = "";
                                 BackendUtils.doGetRequest("/api/v1/dashboard", new HashMap<String, String>() {{
@@ -136,6 +131,7 @@ public class DashboardFragment extends Fragment {
                                         e.printStackTrace();
                                     }
                                 }
+                                */
 
                                 getActivity().runOnUiThread(
                                         new Runnable() {
@@ -188,7 +184,7 @@ public class DashboardFragment extends Fragment {
         adapter.notifyDataSetChanged();
         Log.d(TAG, input);
         if(input.equals("") || input.length() < 5) {
-            errorSnack = Snackbar.make(((Activity) getContext()).findViewById(android.R.id.content), "No polls currently available. Swipe down to check!", Snackbar.LENGTH_INDEFINITE);
+            errorSnack = Snackbar.make(((Activity) getContext()).findViewById(android.R.id.content), "You don't have any responses. Swipe down to check!", Snackbar.LENGTH_INDEFINITE);
             errorSnack.setAction("Dismiss", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -200,7 +196,7 @@ public class DashboardFragment extends Fragment {
             if(errorSnack != null)
                 errorSnack.dismiss();
             swipeContainer.setVisibility(View.VISIBLE);
-            //parse input and add to polls
+            //parse input and add to responses
             //TEMP
             JSONArray jsonarray = null;
             try {
@@ -208,7 +204,6 @@ public class DashboardFragment extends Fragment {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            String bad = new DataStorage(getContext()).getData("lastPollAnswered");
             for (int i = 0; i < jsonarray.length(); i++) {
                 JSONObject jsonobject = null;
                 try {
@@ -216,25 +211,22 @@ public class DashboardFragment extends Fragment {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                String id = "";
                 String question = "";
-                String type = "";
+                String answer = "";
 
                 try {
-                    id = jsonobject.getString("id");
                     question = jsonobject.getString("question");
-                    type = jsonobject.getString("type");
+                    answer = jsonobject.getString("answer");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                if(!id.equals(bad))
-                    polls.add(new Poll(question, type, id));
+                responses.add(new Response(question, answer));
             }
         }
     }
 
     private void initializeAdapter(){
-        adapter = new RVAdapter(polls, getContext());
+        adapter = new RVAdapterResponse(responses, getContext());
         rv.setAdapter(adapter);
     }
 

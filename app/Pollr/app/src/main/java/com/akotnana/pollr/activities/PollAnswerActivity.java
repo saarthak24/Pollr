@@ -1,5 +1,8 @@
 package com.akotnana.pollr.activities;
 
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -16,7 +19,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
@@ -55,11 +60,15 @@ public class PollAnswerActivity extends AppCompatActivity {
     LinearLayout multipleChoice;
     LinearLayout slider;
 
+    Button submitButton;
+
     TextView question;
 
     RadioGroup radioGroup;
 
-    ArrayList<String> choices = new ArrayList<>();
+    ProgressBar bore;
+
+    String answer = "Neutral";
 
     public String TAG = "PollAnswerActivity";
 
@@ -67,6 +76,8 @@ public class PollAnswerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_poll_answer);
+
+        bore = (ProgressBar) findViewById(R.id.progress_bore);
 
         String type = "";
         if (savedInstanceState == null) {
@@ -92,6 +103,20 @@ public class PollAnswerActivity extends AppCompatActivity {
             id = (String) savedInstanceState.getSerializable("id");
         }
 
+        String fromNotification = "";
+        if (savedInstanceState == null) {
+            Bundle extras = getIntent().getExtras();
+            if(extras == null) {
+                fromNotification = null;
+            } else {
+                fromNotification = extras.getString("fromNotification");
+            }
+        } else {
+            fromNotification = (String) savedInstanceState.getSerializable("fromNotification");
+        }
+
+        submitButton = (Button) findViewById(R.id.submit_button);
+
         String question = "";
         if (savedInstanceState == null) {
             Bundle extras = getIntent().getExtras();
@@ -103,6 +128,8 @@ public class PollAnswerActivity extends AppCompatActivity {
         } else {
             question = (String) savedInstanceState.getSerializable("question");
         }
+
+        Log.d(TAG, type + "|" + id + "|" + question);
 
         this.question = (TextView) findViewById(R.id.question);
         this.question.setText(question);
@@ -126,6 +153,7 @@ public class PollAnswerActivity extends AppCompatActivity {
 
         if(type.equals("sd")) {
 
+            Log.d(TAG, "slider startme");
 
             discreteSlider.setOnDiscreteSliderChangeListener(new DiscreteSlider.OnDiscreteSliderChangeListener() {
                 @Override
@@ -133,13 +161,17 @@ public class PollAnswerActivity extends AppCompatActivity {
                     int childCount = tickMarkLabelsRelativeLayout.getChildCount();
                     for (int i = 0; i < childCount; i++) {
                         TextView tv = (TextView) tickMarkLabelsRelativeLayout.getChildAt(i);
-                        if (i == position)
+                        if (i == position) {
                             tv.setTextColor(getResources().getColor(R.color.colorPrimary));
+                            answer = tv.getText().toString();
+                        }
                         else
                             tv.setTextColor(getResources().getColor(R.color.grey_400));
                     }
                 }
             });
+
+            discreteSlider.setPosition(2);
 
             tickMarkLabelsRelativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
@@ -149,37 +181,52 @@ public class PollAnswerActivity extends AppCompatActivity {
                     addTickMarkTextLabels();
                 }
             });
+            bore.setVisibility(GONE);
             slider.setVisibility(View.VISIBLE);
             multipleChoice.setVisibility(GONE);
         } else {
+
+            Log.d(TAG, "MC startme");
             final String finalId = id;
-            BackendUtils.doGetRequest("/api/v1/pokemon", new HashMap<String, String>() {{
+            BackendUtils.doGetRequest("/api/v1/getpoll", new HashMap<String, String>() {{
+                Log.d(TAG,  new DataStorage(getApplicationContext()).getData("auth_token"));
                 put("auth_token", new DataStorage(getApplicationContext()).getData("auth_token"));
                 put("poll_id", finalId);
             }}, new VolleyCallback() {
                 @Override
                 public void onSuccess(String result) {
+                    Log.d(TAG, result);
                     JSONObject object = null;
-                    JSONArray arr = null;
+                    String hello = null;
                     try {
                         object = new JSONObject(result);
-                        arr = object.getJSONArray("choices");
+                        hello = object.getString("choices");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    for (int i = 0; i < arr.length(); i++) {
+                    String[] arr = hello.substring(1, hello.length()-1).split(", ");
 
-                        try {
-                            choices.add((String) arr.get(i));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    for(String a : choices) {
+                    for (int i = 0; i < arr.length; i++) {
                         RadioButton butt = new RadioButton(getApplicationContext());
-                        butt.setText(a);
-                        radioGroup.addView(butt);
+                        butt.setText(arr[i]);
+                        butt.setTextSize(18f);
+                        butt.setPadding(0, 30, 0, 30);
+                        ColorStateList colorStateList = new ColorStateList(
+                                new int[][]{
+                                        new int[]{-android.R.attr.state_checked},
+                                        new int[]{android.R.attr.state_checked}
+                                },
+                                new int[]{
+
+                                        Color.DKGRAY
+                                        , getResources().getColor(R.color.colorPrimary),
+                                }
+                        );
+                        butt.setButtonTintList(colorStateList);
+                        if(!arr[i].isEmpty())
+                            radioGroup.addView(butt);
                     }
+                    bore.setVisibility(GONE);
                     slider.setVisibility(GONE);
                     multipleChoice.setVisibility(View.VISIBLE);
                 }
@@ -208,13 +255,76 @@ public class PollAnswerActivity extends AppCompatActivity {
                 }
             }, getApplicationContext());
         }
+
+        final String finalId1 = id;
+        final String finalId2 = id;
+        final String finalFromNotification = fromNotification;
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                submitButton.setEnabled(false);
+                if(answer.equals("")) {
+                    int selectedId = radioGroup.getCheckedRadioButtonId();
+                    // find the radiobutton by returned id
+                    RadioButton radioButton = (RadioButton) findViewById(selectedId);
+                    answer = radioButton.getText().toString();
+                }
+                BackendUtils.doPostRequest("/api/v1/answer", new HashMap<String, String>() {{
+                    put("auth_token", new DataStorage(getApplicationContext()).getData("auth_token"));
+                    put("poll_id", finalId1);
+                    put("answer", answer);
+                }}, new VolleyCallback() {
+                    @Override
+                    public void onSuccess(String result) {
+                        Log.d(TAG, result);
+                        new DataStorage(getApplicationContext()).storeData("lastPollAnswered", finalId1);
+                        if(finalFromNotification.equals(0))
+                            finish();
+                        else {
+                            Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            startActivity(intent);
+                            overridePendingTransition(0,0);
+                        }
+                    }
+
+                    @Override
+                    public void onSuccess(JSONObject result) {
+
+                    }
+
+                    @Override
+                    public void onError(VolleyError error) {
+                        submitButton.setEnabled(true);
+                        if (error == null || error.networkResponse == null) {
+                            return;
+                        }
+
+                        String body = "";
+                        //get status code here
+                        final String statusCode = String.valueOf(error.networkResponse.statusCode);
+                        //get response body and parse with appropriate encoding
+                        try {
+                            body = new String(error.networkResponse.data,"UTF-8");
+                        } catch (UnsupportedEncodingException e) {
+                            // exception
+                        }
+
+                        Log.e(TAG, body + "\n");
+                    }
+                }, getApplicationContext());
+            }
+        });
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                onBackPressed();
+                Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(intent);
+                overridePendingTransition(0,0);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
