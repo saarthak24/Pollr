@@ -40,40 +40,32 @@ function pPopulate(pollID) {
     AmCharts.makeChart("chart", {
         "type": "pie",
         "balloonText": "[[title]]<br><span style='font-size:14px'><b>[[value]]</b> ([[percents]]%)</span>",
-        "titleField": "country",
-        "valueField": "litres",
+        "titleField": "choice",
+        "valueField": "votes",
         "fontSize": 12,
         "theme": "default",
         "allLabels": [],
         "balloon": {},
         "titles": [],
         "dataProvider": [{
-                "country": "Czech Republic",
-                "litres": "356.9"
+                "choice": "Czech Republic",
+                "votes": 356.9
             },
             {
-                "country": "Ireland",
-                "litres": 131.1
+                "choice": "Ireland",
+                "votes": 131.1
             },
             {
-                "country": "Germany",
-                "litres": 115.8
+                "choice": "Germany",
+                "votes": 115.8
             },
             {
-                "country": "Australia",
-                "litres": 109.9
+                "choice": "Australia",
+                "votes": 109.9
             },
             {
-                "country": "Austria",
-                "litres": 108.3
-            },
-            {
-                "country": "UK",
-                "litres": 65
-            },
-            {
-                "country": "Belgium",
-                "litres": "20"
+                "choice": "Austria",
+                "votes": 108.3
             }
         ]
     });

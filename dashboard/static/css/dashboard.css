@@ -5,3 +5,8 @@
     color: white;
     background-color: red;
 }
+
+#chart {
+    width: auto;
+    height: 40em;
+}
