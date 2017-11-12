@@ -64,12 +64,6 @@ public class BackendUtils {
                 callback.onError(error);
             }
         }) {
-
-            @Override
-            public String getBodyContentType() {
-                return "application/x-www-form-urlencoded; charset=UTF-8";
-            }
-
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 return parameters;

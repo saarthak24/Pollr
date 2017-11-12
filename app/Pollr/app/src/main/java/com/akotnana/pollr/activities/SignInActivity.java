@@ -1,7 +1,9 @@
-package com.akotnana.pollr;
+package com.akotnana.pollr.activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.akotnana.pollr.R;
 
 public class SignInActivity extends AppCompatActivity {
 

@@ -12,6 +12,8 @@ import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
 
+import org.json.JSONObject;
+
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
@@ -50,6 +52,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onSuccess(JSONObject result) {
+
+            }
+
+            @Override
             public void onError(VolleyError error) {
                 if (error == null || error.networkResponse == null) {
                     return;
@@ -78,16 +85,21 @@ public class MainActivity extends AppCompatActivity {
         post.setIndeterminate(true);
         post.setVisibility(View.VISIBLE);
         postRequest.setVisibility(GONE);
-        BackendUtils.doGetRequest("/api/v1/pokemon", new HashMap<String, String>() {{
+        BackendUtils.doPostRequest("/api/v1/pokemon", new HashMap<String, String>() {{
             put("username", "2018akotnana");
             put("password", "password");
             put("firebase_id", "dwjiodjwaoidjwoaidjwaoidjwaidwa");
         }}, new VolleyCallback() {
             @Override
             public void onSuccess(String result) {
-                postRequest.setText(result);
+                postRequest.setText(result.toString());
                 postRequest.setVisibility(View.VISIBLE);
                 post.setVisibility(GONE);
+            }
+
+            @Override
+            public void onSuccess(JSONObject result) {
+
             }
 
             @Override
