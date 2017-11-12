@@ -1,20 +1,41 @@
+var pollIDs;
 $.ajax({
     type: "POST",
     url: '/ppolls',
     complete: function(data) {
-        if (data.responseText != null) {
-        var pollIDs = JSON.parse(data.responseText)
+        if (JSON.parse(data.responseText) != null) {
+        pollIDs = JSON.parse(data.responseText)
         for (index = 0; index < pollIDs.length; ++index) {
-            $("#pollSelect").append('<option value=' + pollIDs[index] + '>' + 'Test' + '</option>') //NEED TO FINISH
+            $("#myDropdown").append('<a href="#" id=' + pollIDs[index] + '>Test</a>') //NEED TO FINISH
         }
-        pPopulate($("#pollSelect").value)
+        $("#chart").height('0em');
     }
 }
 });
 
-$("#pollSelect").change(function() {
-    pPopulate(this.value); //NEED TO FINISH
-});
+/* When the user clicks on the button,
+toggle between hiding and showing the dropdown content */
+function myFunction() {
+    document.getElementById("myDropdown").classList.toggle("show");
+}
+
+// Close the dropdown menu if the user clicks outside of it
+window.onclick = function(event) {
+  if (!event.target.matches('.dropbtn')) {
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    var i;
+    for (i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+    if(pollIDs.includes(event.target.id)){
+        pPopulate(event.target.id)
+    }
+
+  }
+}
 
 function pPopulate(pollID) {
     $.ajax({
@@ -30,13 +51,10 @@ function pPopulate(pollID) {
     $("#chart").val("")
     $("#demographic").val("")
     $("#stats").val("")
-    // $("#pTitle").val()
-    // $("#pType").val()
-    // $("#chart").val()
-    // $("#demographic").val()
-    // $("#stats").val()
-    //If type is slider --> Create bar graph
-    //if type is multiple choice --> Create pie graph
+    $("#pTitle").val("Chart Title")
+    $("#demographic").val("Gender - Male")
+    $("#stats").val("477 Responses")
+    $("#chart").height('40em');
     AmCharts.makeChart("chart", {
         "type": "pie",
         "balloonText": "[[title]]<br><span style='font-size:14px'><b>[[value]]</b> ([[percents]]%)</span>",
@@ -47,6 +65,7 @@ function pPopulate(pollID) {
         "allLabels": [],
         "balloon": {},
         "titles": [],
+        //"startDuration": 0,
         "dataProvider": [{
                 "choice": "Czech Republic",
                 "votes": 356.9

@@ -16,8 +16,7 @@
 
         <link href="http://fonts.googleapis.com/css?family=Roboto:400,700,300" rel='stylesheet' type='text/css'>
         <link "{{ url_for('static',filename='static/css/pe-icon-7-stroke.css') }}" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
         <script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous">
         </script>
@@ -88,21 +87,22 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="card">
-                                    <select id="pollSelect">
-                                    </select>
+                                    <div class="dropdown">
+                                        <button onclick="myFunction()" class="dropbtn">Your Polls</button>
+                                        <div id="myDropdown" class="dropdown-content">
+                                        </div>
+                                    </div>
                                     <div class="header">
                                         <h4 class="title" id="pTitle"></h4>
-                                        <p class="category" id="pType"></p>
                                     </div>
                                     <div class="content">
                                         <div id="chart" class="chart"></div>
                                         <div class="footer">
                                             <div class="demographic" id="demographic">
-                                                Gender - Male
                                             </div>
                                             <hr>
                                             <div class="stats" id="stats">
-                                                477 Responses
+
                                             </div>
                                         </div>
                                     </div>
@@ -110,7 +110,18 @@
                             </div>
                         </div>
 
-
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="header">
+                                        <h4 class="title">Social Media</h4>
+                                    </div>
+                                    <div class="content">
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="row">
                             <div class="col-md-12">
@@ -239,4 +250,5 @@
 
     <!-- Light Bootstrap Table DEMO methods, don't include it in your project! -->
     <script src="{{url_for('static', filename='js/demo.js')}}"></script>
+
 </html>
