@@ -154,7 +154,7 @@ def user():
 	# name = resp["name"]
 	# zipcode = resp["zip"]
 
-	return render_template("user.html", username = username)
+	return render_template("user.html", username = username, rando = r.text)
 
 
 @app.route("/logout")
