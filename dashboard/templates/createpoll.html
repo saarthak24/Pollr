@@ -102,11 +102,12 @@
                         <option value="sd">Opinion Slider</option>
                     </select><br>
                     <input type="text" name="district" placeholder="Voting District" /><br>
-                    <input type="text" name="username" placeholder="Question" /><br><br>
+                    <input type="text" name="question" placeholder="Question" /><br><br>
                     <input type="text" name='a' placeholder="Choice A" /><br>
                     <input type="text" name='b' placeholder="Choice B" /><br>
                     <input type="text" name='c' placeholder="Choice C" /><br>
-                    <input type="text" name='d' placeholder="Choice D" /><br><br>
+                    <input type="text" name='d' placeholder="Choice D" /><br>
+                    <input type="text" name='e' placeholder="Choice E" /><br><br>
 
                     <select name="demographics">
                         <option value="age">Age</option>
@@ -124,6 +125,22 @@
                         <option value="70">70+ years old</option>
                     </select><br>
 
+                    <select name = "gender_groups">
+                        <option value='male'>Male</option>
+                        <option value='female'>Female</option>
+                        <option value='other'>Other</option>
+                    </select>
+
+                    <select name="income_groups">
+                        <option value="$">$0 to $10,000</option>
+                        <option value="$$">$10,000 to $40,000</option>
+                        <option value="$$$">$40,000 to $90,000</option>
+                        <option value="$$$$">$90,000 to $190,000</option>
+                        <option value="$$$$$">$190,000 to $410,000</option>
+                        <option value="$$$$$$">$410,000 to $415,000</option>
+                        <option value="$$$$$$$">$415,000 or more</option>
+                    </select><br>
+
                     <select name="race_groups">
                         <option value="alaska native">Alaska Native</option>
                         <option value="american indian">American Indian</option>
@@ -135,15 +152,7 @@
                         <option value="white">White</option>
                     </select><br>
 
-                    <select name="income_groups">
-                        <option value="$">$0 to $10,000</option>
-                        <option value="$$">$10,000 to $40,000</option>
-                        <option value="$$$">$40,000 to $90,000</option>
-                        <option value="$$$$">$90,000 to $190,000</option>
-                        <option value="$$$$$">$190,000 to $410,000</option>
-                        <option value="$$$$$$">$410,000 to $415,000</option>
-                        <option value="$$$$$$$">$415,000 or more</option>
-                    </select><br>
+                    
 
                     <button>Create Poll</button>
                 </form>

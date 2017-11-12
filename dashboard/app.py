@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, make_response, redirect, url_for
+from flask import Flask, render_template, request, make_response, redirect, url_for, jsonify
 import requests
 import sys
 import hashlib
+import json
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ def my_form_post():
 	print(r.text, file=sys.stderr)
 
 	if r.text != "Fail":
-		resp = make_response(render_template("dashboard.html"))
+		resp = make_response(render_template("dashboard.html", session = r.text))
 		resp.set_cookie('username', username)
 		resp.set_cookie('session_id', r.text)
 		return resp
@@ -46,27 +47,52 @@ def my_form_register():
 	r = requests.post('http://10.199.25.174:5000/api/v1/pregister', data = data)
 	return render_template("dashboard.html")
 
-@app.route("/createpoll")
+@app.route("/createpoll", methods=['GET', 'POST'])
 def createpoll():
+	if request.method == "GET":
+		return render_template("createpoll.html")
+	if request.method == "POST":
+		type_ = request.form['type']
+		district = request.form['district']
+		question = request.form['question']
+		choices = [None, None, None, None, None]
+		if type_ == 'mc':
+			a = request.form['a']
+			b = request.form['b']
+			c = request.form['c']
+			d = request.form['d']
+			e = request.form['e']
+			choices = [a,b,c,d,e]
 
-	session_id = request.cookies.get('session_id')
+		choices = json.dumps(choices).replace('"','')
+		print(choices, file = sys.stderr)
 
-	data = {
-		'session_id': session_id,
-		'question': 'What is love?',
-		'type': 'mc',
-		'choices': {
-			'a': 'fear',
-			'b': 'hate',
-			'c': 'shrek',
-			'd': 'bart'
-		},
-		'district': 'VA03',
-		'demographic': 'race',
-		'filter': 'white'
-	}
+		
+		demographic = request.form['demographics']
+		filter_ = None
+		if demographic == 'age':
+			filter_ = request.form['age_groups']
+		elif demographic == 'gender':
+			filter_ = request.form['gender_groups']
+		elif demographic == 'income':
+			filter_ = request.form['income_groups']
+		elif demographic == 'race':
+			filter_ = request.form['race_groups']
 
-	r = requests.post('http://10.199.25.174:5000/api/v1/pquestion', data = data)
+		session_id = request.cookies.get('session_id')
+
+		data = {
+			'session_id': session_id,
+			'question': question,
+			'type': type_,
+			'choices': choices,
+			'district': district,
+			'demographic': demographic,
+			'filter': filter_
+		}
+
+		r = requests.post('http://10.199.25.174:5000/api/v1/pquestion', data = data)
+
 	return render_template("createpoll.html")
 
 
@@ -75,11 +101,15 @@ def user():
 	username = request.cookies.get('username')
 	session_id = request.cookies.get('session_id')
 	data = {
-		'username': username,
 		'session_id': session_id
 	}
-	#r = requests.post()
-	return render_template("user.html")
+	r = requests.post('http://10.199.25.174:5000/api/v1/puserinfo', data = data)
+	print(r.text, file=sys.stderr)
+	resp = json.loads(r.text)
+	name = resp['name']
+	zipcode = resp['zip']
+
+	return render_template("user.html", name = name, zipcode = zipcode)
 
 @app.route("/logout")
 def logout():
