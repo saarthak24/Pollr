@@ -1,0 +1,222 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:paddingBottom="0dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="top"
+        android:scaleType="centerCrop"
+        android:src="@drawable/background1"
+        android:tint="@color/colorPrimary"
+        android:tintMode="multiply" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:textSize="24sp"
+            android:textColor="@color/white"
+            android:text="Additional Information"
+            android:layout_weight="1"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:layout_weight="3"
+            android:orientation="vertical">
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/name_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/TextLabel" >
+
+                <EditText
+                    android:drawableLeft="@drawable/ic_person_white_24dp"
+                    android:drawableStart="@drawable/ic_person_white_24dp"
+                    android:drawablePadding="10dp"
+                    android:id="@+id/name_edit_text"
+                    android:layout_width="match_parent"
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:imeOptions="actionNext"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:hint="Name" />
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/dob_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/TextLabel" >
+
+                <EditText
+                    android:drawableLeft="@drawable/ic_date_range_white_24dp"
+                    android:drawableStart="@drawable/ic_date_range_white_24dp"
+                    android:drawablePadding="10dp"
+                    android:id="@+id/dob_edit_text"
+                    android:layout_width="match_parent"
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:imeOptions="actionNext"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:hint="Date of Birth" />
+
+            </android.support.design.widget.TextInputLayout>
+
+            <Spinner
+                android:id="@+id/gender_spinner"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:background="#000000"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:spinnerMode="dialog"
+                android:visibility="gone" />
+
+            <Spinner
+                android:id="@+id/race_spinner"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:background="#000000"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:spinnerMode="dialog"
+                android:visibility="gone" />
+
+            <Spinner
+                android:id="@+id/income_spinner"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:background="#000000"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:spinnerMode="dialog"
+                android:visibility="gone" />
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/gender_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/TextLabel" >
+
+                <EditText
+                    android:drawableLeft="@drawable/ic_favorite_white_24dp"
+                    android:drawableStart="@drawable/ic_favorite_white_24dp"
+                    android:drawablePadding="10dp"
+                    android:id="@+id/gender_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textColorHint="@color/white"
+                    android:imeOptions="actionDone"
+                    android:hint="Gender" />
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/location_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/TextLabel" >
+
+                <EditText
+                    android:drawableLeft="@drawable/ic_location_on_white_24dp"
+                    android:drawableStart="@drawable/ic_location_on_white_24dp"
+                    android:drawablePadding="10dp"
+                    android:id="@+id/location_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textColorHint="@color/white"
+                    android:imeOptions="actionDone"
+                    android:hint="District Number" />
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/race_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/TextLabel" >
+
+                <EditText
+                    android:drawableLeft="@drawable/ic_public_white_24dp"
+                    android:drawableStart="@drawable/ic_public_white_24dp"
+                    android:drawablePadding="10dp"
+                    android:id="@+id/race_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textColorHint="@color/white"
+                    android:imeOptions="actionDone"
+                    android:hint="Race" />
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/income_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/TextLabel" >
+
+                <EditText
+                    android:drawableLeft="@drawable/ic_attach_money_white_24dp"
+                    android:drawableStart="@drawable/ic_attach_money_white_24dp"
+                    android:drawablePadding="10dp"
+                    android:id="@+id/income_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textColorHint="@color/white"
+                    android:imeOptions="actionDone"
+                    android:hint="Income Bracket" />
+
+            </android.support.design.widget.TextInputLayout>
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+            <Button
+                android:id="@+id/join_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Join"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/colorAccent"
+                android:layout_centerInParent="true"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"/>
+        </RelativeLayout>
+
+    </LinearLayout>
+
+
+
+
+
+</FrameLayout>

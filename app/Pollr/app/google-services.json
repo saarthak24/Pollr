@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "318098616761",
+    "firebase_url": "https://pollr-89a97.firebaseio.com",
+    "project_id": "pollr-89a97",
+    "storage_bucket": "pollr-89a97.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:318098616761:android:9dfbd7a5c5711298",
+        "android_client_info": {
+          "package_name": "com.akotnana.pollr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "318098616761-iuh3icbg18jnunk2f6hkts2s78c7vkpb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNGIOUoRJ8DqM4hX8JYzPn_w_GOSS8qEY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

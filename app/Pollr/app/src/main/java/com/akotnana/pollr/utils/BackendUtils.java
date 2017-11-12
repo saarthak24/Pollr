@@ -30,6 +30,33 @@ public class BackendUtils {
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             request += entry.getKey() + "=" + entry.getValue();
         }
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, request,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d(TAG, "received callback");
+                        callback.onSuccess(response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        callback.onError(error);
+                    }
+                });
+        RequestQueueSingleton.getInstance(context)
+                .getRequestQueue().add(stringRequest);
+    }
+
+    public static void doCustomGetRequest(String address, Map<String, String> parameters, final VolleyCallback callback, Context context) {
+        String request = address + "?";
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            request += entry.getKey() + "=" + entry.getValue() + "&";
+        }
+
+        Log.d("location", request);
+
         StringRequest stringRequest = new StringRequest(Request.Method.GET, request,
                 new Response.Listener<String>() {
                     @Override

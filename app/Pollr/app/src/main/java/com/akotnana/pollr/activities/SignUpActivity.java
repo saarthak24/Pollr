@@ -17,6 +17,7 @@ import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.DataStorage;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONObject;
 
@@ -24,39 +25,51 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
-public class SignInActivity extends AppCompatActivity {
+import static android.view.View.GONE;
 
-    public String TAG = "SignInActivity";
+public class SignUpActivity extends AppCompatActivity {
+
+    public String TAG = "SignUpActivity";
 
     EditText username;
     EditText password;
-    Button signIn;
-    LinearLayout signUp;
+    EditText email;
+    Button signUp;
+    LinearLayout signIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sign_in);
+        setContentView(R.layout.activity_sign_up);
 
         username = (EditText) findViewById(R.id.username_edit_text);
         password = (EditText) findViewById(R.id.password_edit_text);
-        signIn = (Button) findViewById(R.id.login_button);
-        signUp = (LinearLayout) findViewById(R.id.sign_up_link);
+        email = (EditText) findViewById(R.id.email_edit_text);
+        signUp = (Button) findViewById(R.id.register_button);
 
-        signIn.setOnClickListener(new View.OnClickListener() {
+        final String token = FirebaseInstanceId.getInstance().getToken();
+        String realToken = "";
+        if(token.equals("")) {
+            realToken = new DataStorage(getApplicationContext()).getData("firebaseID");
+        } else {
+            realToken = token;
+        }
+
+        final String finalRealToken = realToken;
+        signUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (!validate()) {
-                    onLoginFailed();
+                    onSignUpFailed();
                     return;
                 }
                 signUp.setEnabled(false);
-                final ProgressDialog progressDialog = new ProgressDialog(SignInActivity.this,
+                final ProgressDialog progressDialog = new ProgressDialog(SignUpActivity.this,
                         R.style.AppTheme_Dark_Dialog);
                 progressDialog.setIndeterminate(true);
                 progressDialog.setMessage("Authenticating...");
                 progressDialog.show();
-                BackendUtils.doPostRequest("/api/v1/login", new HashMap<String, String>() {{
+                BackendUtils.doPostRequest("/api/v1/register", new HashMap<String, String>() {{
                     put("username", username.getText().toString());
                     String pass = password.getText().toString();
                     try {
@@ -65,17 +78,13 @@ public class SignInActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     put("password", pass);
+                    put("firebase_id", finalRealToken);
                 }}, new VolleyCallback() {
                     @Override
                     public void onSuccess(String result) {
-                        if(result.equals("Fail")) {
-                            onLoginFailed();
-                            progressDialog.dismiss();
-                        } else {
-                            new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
-                            onLoginSuccess();
-                            progressDialog.dismiss();
-                        }
+                        new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
+                        onSignUpSuccess();
+                        progressDialog.dismiss();
                     }
 
                     @Override
@@ -106,12 +115,12 @@ public class SignInActivity extends AppCompatActivity {
             }
         });
 
-        signUp = (LinearLayout) findViewById(R.id.sign_up_link);
+        signIn = (LinearLayout) findViewById(R.id.sign_in_link);
 
-        signUp.setOnClickListener(new View.OnClickListener() {
+        signIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(),SignUpActivity.class);
+                Intent intent = new Intent(getApplicationContext(),SignInActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
             }
@@ -122,6 +131,7 @@ public class SignInActivity extends AppCompatActivity {
         boolean valid = true;
 
         String username = this.username.getText().toString();
+        String email = this.email.getText().toString();
         String password = this.password.getText().toString();
 
         if (username.isEmpty()) {
@@ -129,6 +139,13 @@ public class SignInActivity extends AppCompatActivity {
             valid = false;
         } else {
             this.username.setError(null);
+        }
+
+        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            this.email.setError("enter a valid email address");
+            valid = false;
+        } else {
+            this.email.setError(null);
         }
 
         if (password.isEmpty() || password.length() < 4) {
@@ -141,14 +158,14 @@ public class SignInActivity extends AppCompatActivity {
         return valid;
     }
 
-    public void onLoginFailed() {
-        Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_SHORT).show();
+    public void onSignUpFailed() {
+        Toast.makeText(getBaseContext(), "Sign up failed", Toast.LENGTH_SHORT).show();
         signUp.setEnabled(true);
     }
 
-    public void onLoginSuccess() {
+    public void onSignUpSuccess() {
         signUp.setEnabled(true);
-        Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
+        Intent intent = new Intent(getApplicationContext(), ProfileEditActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
         startActivity(intent);
         overridePendingTransition(0,0);

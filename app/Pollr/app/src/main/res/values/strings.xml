@@ -1,3 +1,41 @@
 <resources>
     <string name="app_name">Pollr</string>
+
+    <string name="title_activity_sign_up">SignUpActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <string-array name="gender">
+        <item>Male</item>
+        <item>Female</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="race">
+        <item>Alaska Native</item>
+        <item>American Indian</item>
+        <item>Asian</item>
+        <item>Black/African American</item>
+        <item>Hispanic/Latino</item>
+        <item>Native Hawaiian/Pacific Islander</item>
+        <item>Mixed</item>
+        <item>White</item>
+    </string-array>
+
+    <string-array name="income">
+        <item>$0 to $10,000</item>
+        <item>$10,000 to $40,000</item>
+        <item>$40,000 to $90,000</item>
+        <item>$90,000 to $190,000</item>
+        <item>$190,000 to $410,000</item>
+        <item>$410,000 to $415,000</item>
+        <item>$415,000 or more</item>
+    </string-array>
+
+    <string name="gender_label">Gender</string>
+    <string name="income_label">Income Bracket</string>
+    <string name="race_label">Race</string>
+
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
 </resources>

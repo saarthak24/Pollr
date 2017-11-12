@@ -3,11 +3,14 @@
     <color name="colorPrimary">#ed4545</color>
     <color name="colorPrimaryDark">#FF4A4A</color>
     <color name="colorAccent">#e62828</color>
+    <color name="lightColor">#F66B74</color>
 
     <color name="green">#21CE99</color>
     <color name="gray">#040D14</color>
     <color name="red">#D32F2F</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+
+    <color name="black_overlay">#66000000</color>
 
 </resources>
