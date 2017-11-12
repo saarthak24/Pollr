@@ -4,9 +4,10 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import pymongo
 import hashlib
+from socialmedia.twitter_term_analysis import TwitterClient, TwitterClientLoc
 
 app = Flask(__name__)
-client = MongoClient("ds255265.mlab.com",55265)
+client = MongoClient("ds257495.mlab.com",57495)
 
 db = client["pollr"]
 db.authenticate("pollr-server","pollr")
@@ -16,7 +17,62 @@ push_service = FCMNotification(api_key="AAAAShAnsbk:APA91bGm7bK9Jlc7pFu38oQ-9w1_
 pokedex = [{'number': 14, 'name': 'Kakuna'},
            {'number': 16, 'name': 'Pidgey'},
            {'number': 50, 'name': 'Diglett'}]
+def main(term, geocode, num, count):
+    json = {}
+    json['word'] = term
+    api = TwitterClient()
+    tweets = api.get_tweets(query = term, count = count)
 
+    json['national'] = {}
+    ptweets = [tweet for tweet in tweets if tweet['sentiment'] == 'positive']
+    json['national']['pos'] = 100*len(ptweets)/len(tweets)
+    ntweets = [tweet for tweet in tweets if tweet['sentiment'] == 'negative']
+    json['national']['neg'] = 100*len(ntweets)/len(tweets)
+
+    posids = []
+    negids = []
+    for tweet in ptweets[:num]:
+        posids.append(tweet['id'])
+    for tweet in ntweets[:num]:
+        negids.append(tweet['id'])
+    json['national']['pos_ids'] = posids
+    json['national']['neg_ids'] = negids
+
+    apiLoc = TwitterClientLoc()
+    tweets = apiLoc.get_tweets(query = term , geocode = geocode, count = count)
+
+    json['local'] = {}
+    ptweets = [tweet for tweet in tweets if tweet['sentiment'] == 'positive']
+    json['local']['pos'] = 100*len(ptweets)/len(tweets)
+    ntweets = [tweet for tweet in tweets if tweet['sentiment'] == 'negative']
+    json['local']['neg'] = 100*len(ntweets)/len(tweets)
+
+
+    posids = []
+    negids = []
+    for tweet in ptweets[:num]:
+        posids.append(tweet['id'])
+    for tweet in ntweets[:num]:
+        negids.append(tweet['id'])
+    json['local']['pos_ids'] = posids
+    json['local']['neg_ids'] = negids
+    return json
+
+def words(text):
+    r = Rake()
+    r.extract_keywords_from_text(text)
+
+    results = r.get_ranked_phrases()
+    results = results[:int(math.log2(len(results)))]
+    final = [];
+    for word in results:
+        if word in commonwords:
+            continue
+        for asdf in commonwords:
+            if asdf in word.strip():
+                continue
+        final.append(word)
+    return final
 @app.route('/api/v1/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
@@ -60,9 +116,9 @@ def login():
         if(user_match["password"] == user_login["password"]):
             # hash_f = hashlib.md5((str(user_match["firebase_id"]) +  str(user_match["username"])+ "pollr").encode("utf-8"))
             registration_id = user_match["firebase_id"]
-            message_title = "Update!"
-            message_body = "Hey " + user_match["username"] + "! You just logged your ass in!"
-            result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
+        #    message_title = "Update!"
+        #    message_body = "Hey " + user_match["username"] + "! You just logged your ass in!"
+        #    result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
             return user_match["hash_f"]
 
         return "Fail"
@@ -119,7 +175,6 @@ def plogin():
             sess_id = hashlib.md5((str(user_login["username"]) + "pollr").encode("utf-8")).hexdigest()
             db.politicians.update({"username" : user_login["username"]},{"$set":{"session_id" : sess_id}})
             return sess_id
-
         return "Fail"
 @app.route('/api/v1/user_profile', methods=['POST'])
 def user_profile():
@@ -135,7 +190,7 @@ def user_profile():
         db.usrs.update({"username":username},{"$set":{
             "gender" : user_info["gender"].lower(),
             "age" : user_info["age"].lower(),
-            "district" : user_info["district"].lower(),
+            "district" : user_info["district"],
             "income" : user_info["income"].lower(),
             "race" : user_info["race"].lower(),
             "name" : user_info["name"].lower()
@@ -165,6 +220,7 @@ def dashboard():
             pl = db.polls.find_one({"_id": i})
             rese.append({"question":pl["question"], "id": str(i), "type": pl["type"]})
     return jsonify(rese)
+
 @app.route('/api/v1/getpoll',methods=['GET'])
 def getpoll():
     if request.method == 'GET':
@@ -172,6 +228,7 @@ def getpoll():
         _id = request.args.get("poll_id")
         print(_id)
         pl = db.polls.find_one({"_id": ObjectId(_id)})
+
         # return jsonify(pl)
         pl["_id"] = str(ObjectId(_id))
         return str(pl)
@@ -193,8 +250,6 @@ def answer():
         db.usrs.update({"username": username},{"$pull": {"polls":ObjectId(user_info["poll_id"])}})
         print(db.usrs.find_one({"username":username})["polls"])
         return "Success!"
-
-
 
 @app.route('/api/v1/pquestion', methods=['POST'])
 def pquestion():
@@ -221,7 +276,7 @@ def pquestion():
             notif = i["firebase_id"]
             registration_id = notif
             message_title = "Update!"
-            message_body = "Hey " + i["name"] + "! You have a new poll awaitting!," +  str(_id)
+            message_body = "Hey " + i["name"] + "! You have a new poll awaiting!," +  str(_id) + "," + user_info["question"] + "," + user_info["type"]
             result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
         return "success"
 
@@ -230,6 +285,8 @@ def ppolls():
     if request.method == 'POST':
         user_info = request.form.to_dict()
         rslts = db.politicians.find_one({"session_id": user_info["session_id"]})
+        print(user_info["session_id"])
+        print(rslts)
         if(rslts == None):
             return "fail"
         print(rslts['polls'])
@@ -255,16 +312,86 @@ def ppollinfo():
         user_info = request.form.to_dict()
         ses_id = user_info["session_id"]
         pol_id = user_info["poll_id"]
-        print(pol_id)
+        print("pol_id", pol_id)
         print(ses_id)
         # print(db.responses.find_one({"poll_id":ObjectId(str(user_info["poll_id"]))}))
         # # username = db.usrs.find_one({"hash_f":user_info["session_id"]})["username"]
         # p_info = db.polls.find_one({"_id": ObjectId(_id)})
-
-        respp = db.responses.find_one({"poll_id":user_info["poll_id"]})
+        #politicians demographics
+        #politicians filter
+        respp_list = []
+        respp = db.responses.find({"poll_id":pol_id})
+        for i in respp:
+            i["_id"] = pol_id
+            respp_list.append(i)
+        poll_info = db.polls.find_one({"_id":ObjectId(pol_id)})
         print(respp)
-        respp["_id"] = pol_id
+        print(poll_info)
+        dem = poll_info["demographic"]
+        filtr = poll_info["filter"]
+        df = {"dem": dem,"filter":filtr,"choices": poll_info["choices"],"question": poll_info["question"],"voting_district":poll_info["voting_district"]}
+        # print(usr_d)
+        # dems = {"age":usr_d["age"],"gender":usr_d["gender"],"race":usr_d["race"],"district":usr_d["district"],"income":usr_d["income"]}
+        rsp = dict()
+        rsp["responses"] = respp_list
+        # respp["_id"] = pol_id
+        rsp["df"] = df
+        # respp["demographics"] = dems
+        print(rsp)
+        return jsonify(rsp)
+@app.route('/api/v1/socialmedia',methods=['POST'])
+def socialmedia():
+    if(request.method == 'POST'):
+        user_info = request.form.to_dict()
+        ses_id = user_info["session_id"]
+        politician = db.politicians.find_one({"session_id": ses_id})
+        polls = politician["polls"]
+        zp = politician["zipcode"]
+        message = ""
+        for i in polls:
+            post = db.posts.find_one({"_id":ObjectId(i)})["question"]
+            message += (post + " ")
+
+        myzip = zipcode.isequal(zp)
+        geocode = str(myzip.lat) + "," + str(myzip.lon) + ",100mi"
+        text = message
+        json = {}
+        data = []
+        for word in words(text):
+            try:
+                data.append(main(word, geocode, 1, 500))
+            except ZeroDivisionError as e:
+                continue
+        json['num_words'] = len(data)
+        json['words'] = data
+        print(json)
+    return jsonify(json)
+@app.route('/api/v1/user_profile_get',methods=['POST'])
+def user_profile_get():
+    if(request.method == 'POST'):
+        user_info = request.form.to_dict()
+        ses_id = user_info['auth_token']
+        user = db.usrs.find_one({"hash_f": ses_id})
+        if(user is None):
+            return "fail"
+        print(user)
+        responses_cnt = db.responses.count({"username":user["username"]})
+        respp = {"name":user["name"],"race":user["race"],"username":user["username"],"gender":user["gender"],"age":user["age"],"district":user["district"],"income":user["income"],"pollResponse":responses_cnt}
         return jsonify(respp)
+@app.route('/api/v1/responses',methods=['GET'])
+def responses():
+    if(request.method == 'GET'):
+        ses_id = request.args.get("auth_token")
+        user = db.usrs.find_one({"hash_f": ses_id})
+        username = user["username"]
+        rslts = db.responses.find({"username": username})
+        lst = []
+        for i in rslts:
+            poll_id = i["poll_id"]
+            qd = db.polls.find_one({"_id":ObjectId(poll_id)})["question"]
+            ans = i["answer"]
+            lst.append({"question":qd,"answer":ans})
+        return jsonify(lst)
 
 if __name__ == '__main__':
 
