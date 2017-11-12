@@ -46,16 +46,40 @@ def my_form_register():
 	r = requests.post('http://10.199.25.174:5000/api/v1/pregister', data = data)
 	return render_template("dashboard.html")
 
+@app.route("/createpoll")
+def createpoll():
+
+	session_id = request.cookies.get('session_id')
+
+	data = {
+		'session_id': session_id,
+		'question': 'What is love?',
+		'type': 'mc',
+		'choices': {
+			'a': 'fear',
+			'b': 'hate',
+			'c': 'shrek',
+			'd': 'bart'
+		},
+		'district': 'VA03',
+		'demographic': 'race',
+		'filter': 'white'
+	}
+
+	r = requests.post('http://10.199.25.174:5000/api/v1/pquestion', data = data)
+	return render_template("createpoll.html")
+
+
 @app.route("/user")
 def user():
 	username = request.cookies.get('username')
-	session_id = requests.cookies.get('session_id')
+	session_id = request.cookies.get('session_id')
 	data = {
 		'username': username,
 		'session_id': session_id
 	}
-	r = requests.post()
-	return render_template("user.html", data = data)
+	#r = requests.post()
+	return render_template("user.html")
 
 @app.route("/logout")
 def logout():

@@ -54,13 +54,13 @@
                             <p>Dashboard</p>
                         </a>
                     </li>
-                    <li>
+                    <li class='active'>
                         <a href="/createpoll">
                             <i class="pe-7s-note2"></i>
                             <p>Create Poll</p>
                         </a>
                     </li>
-                    <li class="active">
+                    <li>
                         <a href="/user">
                             <i class="pe-7s-user"></i>
                             <p>User Profile</p>
@@ -80,7 +80,7 @@
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
                         </button>
-                        <a class="navbar-brand" href="#">User Profile</a>
+                        <a class="navbar-brand" href="#">Create Poll</a>
                     </div>
                     <div class="collapse navbar-collapse">
                         <ul class="nav navbar-nav navbar-right">
@@ -95,35 +95,59 @@
                 </div>
             </nav>
 
+            <div class = 'content'>
+                <form class="poll-form" id="poll-form" method="post">
+                    <select name="type">
+                        <option value="mc">Multiple Choice</option>
+                        <option value="sd">Opinion Slider</option>
+                    </select><br>
+                    <input type="text" name="district" placeholder="Voting District" /><br>
+                    <input type="text" name="username" placeholder="Question" /><br><br>
+                    <input type="text" name='a' placeholder="Choice A" /><br>
+                    <input type="text" name='b' placeholder="Choice B" /><br>
+                    <input type="text" name='c' placeholder="Choice C" /><br>
+                    <input type="text" name='d' placeholder="Choice D" /><br><br>
 
-        <div class="content">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-10 col-md-offset-1    ">
-                        <div class="card card-user">
-                            <div class="image">
-                                <img src="https://ununsplash.imgix.net/photo-1431578500526-4d9613015464?fit=crop&fm=jpg&h=300&q=75&w=400" alt="..."/>
-                            </div>
-                            <div class="content">
-                                <div class="author">
-                                     <a href="#">
-                                    <img class="avatar border-gray" src="assets/img/faces/face-3.jpg" alt="..."/>
+                    <select name="demographics">
+                        <option value="age">Age</option>
+                        <option value="gender">Gender</option>
+                        <option value="income">Income</option>
+                        <option value="race">Race</option>
+                    </select><br>
 
-                                      <h4 class="title">Penny the Platypus
-                                      </h4>
-                                    </a>
-                                </div>
-                                <p class="description text-center"> 
-                                    asdf
-                                </p>
-                            </div>
-                            <hr>
-                        </div>
-                    </div>
-                </div>
+                    <select name="age_groups">
+                        <option value="20">18 to 29 years old</option>
+                        <option value="30">30 to 39 years old</option>
+                        <option value="40">40 to 49 years old</option>
+                        <option value="50">50 to 59 years old</option>
+                        <option value="60">60 to 69 years old</option>
+                        <option value="70">70+ years old</option>
+                    </select><br>
+
+                    <select name="race_groups">
+                        <option value="alaska native">Alaska Native</option>
+                        <option value="american indian">American Indian</option>
+                        <option value="asian">Asian</option>
+                        <option value="black">Black/African American</option>
+                        <option value="hispanic">Hispanic/Latino</option>
+                        <option value='hawaiian'>Native Hawaiian/Pacific Islander</option>
+                        <option value="mixed">Mixed</option>
+                        <option value="white">White</option>
+                    </select><br>
+
+                    <select name="income_groups">
+                        <option value="$">$0 to $10,000</option>
+                        <option value="$$">$10,000 to $40,000</option>
+                        <option value="$$$">$40,000 to $90,000</option>
+                        <option value="$$$$">$90,000 to $190,000</option>
+                        <option value="$$$$$">$190,000 to $410,000</option>
+                        <option value="$$$$$$">$410,000 to $415,000</option>
+                        <option value="$$$$$$$">$415,000 or more</option>
+                    </select><br>
+
+                    <button>Create Poll</button>
+                </form>
             </div>
-        </div>
-
 
         <footer class="footer">
             <div class="container-fluid">
