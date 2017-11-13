@@ -76,14 +76,9 @@ def words(text):
 @app.route('/api/v1/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
-        # print(request.form["username"])
-        # print(type(request.form))
-        # print(request.form.to_dict())
         user_register = request.form.to_dict()
         print(user_register)
-        # hash_p = hashlib.md5(str(user_register["password"]).encode("utf-8"))
         hash_f = hashlib.md5((str(user_register["firebase_id"]) + str(user_register["username"])  + "pollr").encode("utf-8"))
-        # hashlib.md5(d.encode("utf-8"))
         db.usrs.insert_one({
             "username": user_register["username"],
             "password": user_register["password"],
@@ -91,21 +86,14 @@ def register():
             "hash_f": hash_f.hexdigest(),
             "polls":[]
         })
-        # print(json.dumps(request.data))
 
-        # print(jsonify(str(request.data.decode('utf-8'))).replace("\"",""))
-        # return request.form["username"]
 
     return hash_f.hexdigest()
 @app.route('/api/v1/login', methods=['POST'])
 def login():
     if request.method == 'POST':
-        # print(request.form["username"])
-        # print(type(request.form))
-        # print(request.form.to_dict())
         user_login = request.form.to_dict()
         print(user_login)
-        # hash_p = hashlib.md5(str(user_login["password"]).encode("utf-8"))
         user_match = db.usrs.find_one({
             "username" : user_login["username"]
         })
@@ -114,11 +102,7 @@ def login():
 
         print(user_match["password"],user_login["password"])
         if(user_match["password"] == user_login["password"]):
-            # hash_f = hashlib.md5((str(user_match["firebase_id"]) +  str(user_match["username"])+ "pollr").encode("utf-8"))
             registration_id = user_match["firebase_id"]
-        #    message_title = "Update!"
-        #    message_body = "Hey " + user_match["username"] + "! You just logged your ass in!"
-        #    result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
             return user_match["hash_f"]
 
         return "Fail"
@@ -167,11 +151,6 @@ def plogin():
             return "Fail"
         print(user_match["password"],user_login["password"])
         if(user_match["password"] == user_login["password"]):
-            # hash_f = hashlib.md5((str(user_match["firebase_id"]) + "pollr").encode("utf-8"))
-            # registration_id = user_match["firebase_id"]
-            # message_title = "Update!"
-            # message_body = "Hey " + user_match["username"] + "! You just logged your ass in!"
-            # result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
             sess_id = hashlib.md5((str(user_login["username"]) + "pollr").encode("utf-8")).hexdigest()
             db.politicians.update({"username" : user_login["username"]},{"$set":{"session_id" : sess_id}})
             return sess_id
