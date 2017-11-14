@@ -6,7 +6,7 @@ import pymongo
 import hashlib
 from socialmedia.twitter_term_analysis import TwitterClient, TwitterClientLoc
 
-app = Flask(__name__)
+application = Flask(__name__)
 client = MongoClient("ds257495.mlab.com",57495)
 
 db = client["pollr"]
@@ -374,4 +374,4 @@ def responses():
 
 if __name__ == '__main__':
 
-    app.run(host='0.0.0.0',debug=True)
+    application.run(host='0.0.0.0',debug=True)
