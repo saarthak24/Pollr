@@ -22,7 +22,9 @@ public class BackendUtils {
 
     public static String TAG = "BackendUtils";
 
-    private static String IP = "http://10.199.25.174";
+    //private static String IP = "http://10.199.25.174";
+    private static String IP = "http://35.196.14.187";
+
     private static int PORT = 5000;
     private static String result = "";
 
