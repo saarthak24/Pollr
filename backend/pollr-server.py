@@ -73,7 +73,7 @@ def words(text):
                 continue
         final.append(word)
     return final
-@app.route('/api/v1/register', methods=('GET', 'POST'))
+@application.route('/api/v1/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
         user_register = request.form.to_dict()
@@ -89,7 +89,7 @@ def register():
 
 
     return hash_f.hexdigest()
-@app.route('/api/v1/login', methods=['POST'])
+@application.route('/api/v1/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         user_login = request.form.to_dict()
@@ -106,7 +106,7 @@ def login():
             return user_match["hash_f"]
 
         return "Fail"
-@app.route('/api/v1/pregister', methods=('GET', 'POST'))
+@application.route('/api/v1/pregister', methods=('GET', 'POST'))
 def pregister():
     if request.method == 'POST':
         # print(request.form["username"])
@@ -135,7 +135,7 @@ def pregister():
         # return request.form["username"]
     return "True"
     # return hash_f.hexdigest()
-@app.route('/api/v1/plogin', methods=['POST'])
+@application.route('/api/v1/plogin', methods=['POST'])
 def plogin():
     if request.method == 'POST':
         # print(request.form["username"])
@@ -155,7 +155,7 @@ def plogin():
             db.politicians.update({"username" : user_login["username"]},{"$set":{"session_id" : sess_id}})
             return sess_id
         return "Fail"
-@app.route('/api/v1/user_profile', methods=['POST'])
+@application.route('/api/v1/user_profile', methods=['POST'])
 def user_profile():
 
     if request.method == 'POST':
@@ -188,7 +188,7 @@ def user_profile():
 
         # print(jsonify(str(request.data.decode('utf-8'))).replace("\"",""))
         # return request.form["username"]
-@app.route('/api/v1/dashboard', methods=['GET'])
+@application.route('/api/v1/dashboard', methods=['GET'])
 def dashboard():
     if request.method == 'GET':
         sess_token = request.args.get("auth_token")
@@ -200,7 +200,7 @@ def dashboard():
             rese.append({"question":pl["question"], "id": str(i), "type": pl["type"]})
     return jsonify(rese)
 
-@app.route('/api/v1/getpoll',methods=['GET'])
+@application.route('/api/v1/getpoll',methods=['GET'])
 def getpoll():
     if request.method == 'GET':
         sess_token = request.args.get("auth_token")
@@ -213,7 +213,7 @@ def getpoll():
         return str(pl)
     return "false"
 
-@app.route('/api/v1/answer',methods=['POST'])
+@application.route('/api/v1/answer',methods=['POST'])
 def answer():
     if request.method == 'POST':
         user_info = request.form.to_dict()
@@ -230,7 +230,7 @@ def answer():
         print(db.usrs.find_one({"username":username})["polls"])
         return "Success!"
 
-@app.route('/api/v1/pquestion', methods=['POST'])
+@application.route('/api/v1/pquestion', methods=['POST'])
 def pquestion():
     user_info = request.form.to_dict()
     if request.method == 'POST':
@@ -259,7 +259,7 @@ def pquestion():
             result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
         return "success"
 
-@app.route('/api/v1/ppolls', methods=['POST'])
+@application.route('/api/v1/ppolls', methods=['POST'])
 def ppolls():
     if request.method == 'POST':
         user_info = request.form.to_dict()
@@ -270,7 +270,7 @@ def ppolls():
             return "fail"
         print(rslts['polls'])
         return jsonify(rslts['polls'])
-@app.route('/api/v1/puserinfo', methods=['POST'])
+@application.route('/api/v1/puserinfo', methods=['POST'])
 def puserinfo():
     if request.method == 'POST':
         user_info = request.form.to_dict()
@@ -285,7 +285,7 @@ def puserinfo():
         if(rslt is not None):
             return jsonify(rslt)
         return "fail"
-@app.route('/api/v1/ppollinfo',methods=['POST'])
+@application.route('/api/v1/ppollinfo',methods=['POST'])
 def ppollinfo():
     if(request.method == 'POST'):
         user_info = request.form.to_dict()
@@ -318,7 +318,7 @@ def ppollinfo():
         # respp["demographics"] = dems
         print(rsp)
         return jsonify(rsp)
-@app.route('/api/v1/socialmedia',methods=['POST'])
+@application.route('/api/v1/socialmedia',methods=['POST'])
 def socialmedia():
     if(request.method == 'POST'):
         user_info = request.form.to_dict()
@@ -345,7 +345,7 @@ def socialmedia():
         json['words'] = data
         print(json)
     return jsonify(json)
-@app.route('/api/v1/user_profile_get',methods=['POST'])
+@application.route('/api/v1/user_profile_get',methods=['POST'])
 def user_profile_get():
     if(request.method == 'POST'):
         user_info = request.form.to_dict()
@@ -357,7 +357,7 @@ def user_profile_get():
         responses_cnt = db.responses.count({"username":user["username"]})
         respp = {"name":user["name"],"race":user["race"],"username":user["username"],"gender":user["gender"],"age":user["age"],"district":user["district"],"income":user["income"],"pollResponse":responses_cnt}
         return jsonify(respp)
-@app.route('/api/v1/responses',methods=['GET'])
+@application.route('/api/v1/responses',methods=['GET'])
 def responses():
     if(request.method == 'GET'):
         ses_id = request.args.get("auth_token")
