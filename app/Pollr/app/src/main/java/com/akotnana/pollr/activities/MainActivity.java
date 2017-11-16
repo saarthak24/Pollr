@@ -58,22 +58,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(VolleyError error) {
-                if (error == null || error.networkResponse == null) {
-                    return;
-                }
-
-                String body = "";
-                //get status code here
-                final String statusCode = String.valueOf(error.networkResponse.statusCode);
-                //get response body and parse with appropriate encoding
-                try {
-                    body = new String(error.networkResponse.data,"UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    // exception
-                }
-
-                Log.e(TAG, body + "\n");
-
                 getRequest.setText("Bad request");
                 getRequest.setVisibility(View.VISIBLE);
                 get.setVisibility(GONE);
@@ -104,23 +88,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(VolleyError error) {
-
-                if (error == null || error.networkResponse == null) {
-                    return;
-                }
-
-                String body = "";
-                //get status code here
-                final String statusCode = String.valueOf(error.networkResponse.statusCode);
-                //get response body and parse with appropriate encoding
-                try {
-                    body = new String(error.networkResponse.data,"UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    // exception
-                }
-
-                Log.e(TAG, body + "\n");
-
                 postRequest.setText("Bad request");
                 postRequest.setVisibility(View.VISIBLE);
                 post.setVisibility(GONE);
