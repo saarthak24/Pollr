@@ -105,27 +105,8 @@ public class DashboardFragment extends Fragment {
                                     }
 
                                     @Override
-                                    public void onSuccess(JSONObject result) {
-
-                                    }
-
-                                    @Override
                                     public void onError(VolleyError error) {
-                                        if (error == null || error.networkResponse == null) {
-                                            return;
-                                        }
 
-                                        String body = "";
-                                        //get status code here
-                                        final String statusCode = String.valueOf(error.networkResponse.statusCode);
-                                        //get response body and parse with appropriate encoding
-                                        try {
-                                            body = new String(error.networkResponse.data,"UTF-8");
-                                        } catch (UnsupportedEncodingException e) {
-                                            // exception
-                                        }
-
-                                        Log.e(TAG, body + "\n");
                                     }
                                 }, getContext());
 

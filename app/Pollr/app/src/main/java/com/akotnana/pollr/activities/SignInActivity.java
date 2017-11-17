@@ -2,6 +2,7 @@ package com.akotnana.pollr.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +18,13 @@ import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.DataStorage;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
+import com.google.firebase.crash.FirebaseCrash;
 
 import org.json.JSONObject;
 
@@ -28,6 +36,8 @@ public class SignInActivity extends AppCompatActivity {
 
     public String TAG = "SignInActivity";
 
+    private FirebaseAuth mAuth;
+
     EditText username;
     EditText password;
     Button signIn;
@@ -38,6 +48,8 @@ public class SignInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
+        mAuth = FirebaseAuth.getInstance();
+
         username = (EditText) findViewById(R.id.username_edit_text);
         password = (EditText) findViewById(R.id.password_edit_text);
         signIn = (Button) findViewById(R.id.login_button);
@@ -47,7 +59,8 @@ public class SignInActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!validate()) {
-                    onLoginFailed();
+                    Toast.makeText(SignInActivity.this, "Authentication failed.",
+                            Toast.LENGTH_SHORT).show();
                     return;
                 }
                 signUp.setEnabled(false);
@@ -56,34 +69,40 @@ public class SignInActivity extends AppCompatActivity {
                 progressDialog.setIndeterminate(true);
                 progressDialog.setMessage("Authenticating...");
                 progressDialog.show();
-                BackendUtils.doPostRequest("/api/v1/login", new HashMap<String, String>() {{
-                    put("username", username.getText().toString());
-                    String pass = password.getText().toString();
-                    try {
-                        pass = new DataStorage(getApplicationContext()).md5(pass);
-                    } catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                    }
-                    put("password", pass);
-                }}, new VolleyCallback() {
-                    @Override
-                    public void onSuccess(String result) {
-                        if(result.equals("Fail")) {
-                            onLoginFailed();
-                            progressDialog.dismiss();
-                        } else {
-                            new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
-                            Log.d("AUTH_TOKEN", result);
-                            onLoginSuccess();
-                            progressDialog.dismiss();
-                        }
-                    }
+                mAuth.signInWithEmailAndPassword(username.getText().toString(), password.getText().toString())
+                        .addOnCompleteListener(SignInActivity.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    // Sign in success, update UI with the signed-in user's information
+                                    Log.d(TAG, "signInWithEmail:success");
+                                    FirebaseUser currentUser = mAuth.getCurrentUser();
+                                    currentUser.getToken(true)
+                                            .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                                                public void onComplete(@NonNull Task<GetTokenResult> task) {
+                                                    if (task.isSuccessful()) {
+                                                        String idToken = task.getResult().getToken();
+                                                        new DataStorage(getApplicationContext()).storeData("firebaseIdToken", idToken);
+                                                        //TODO: Send rahul some joints
+                                                    } else {
+                                                        FirebaseCrash.report(task.getException());
+                                                    }
+                                                }
+                                            });
+                                    progressDialog.dismiss();
+                                    updateUI(currentUser);
+                                } else {
+                                    progressDialog.dismiss();
+                                    // If sign in fails, display a message to the user.
+                                    Log.w(TAG, "signInWithEmail:failure", task.getException());
+                                    Toast.makeText(SignInActivity.this, "Authentication failed.",
+                                            Toast.LENGTH_SHORT).show();
+                                    //updateUI(null);
+                                }
 
-                    @Override
-                    public void onError(VolleyError error) {
-
-                    }
-                }, getApplicationContext());
+                                // ...
+                            }
+                        });
             }
         });
 
@@ -97,6 +116,38 @@ public class SignInActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Check if user is signed in (non-null) and update UI accordingly.
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if(currentUser != null) {
+            currentUser.getToken(true)
+                    .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                        public void onComplete(@NonNull Task<GetTokenResult> task) {
+                            if (task.isSuccessful()) {
+                                String idToken = task.getResult().getToken();
+                                new DataStorage(getApplicationContext()).storeData("firebaseIdToken", idToken);
+                                //TODO: Send rahul some joints
+                            } else {
+                                FirebaseCrash.report(task.getException());
+                            }
+                        }
+                    });
+        }
+        updateUI(currentUser);
+    }
+
+    public void updateUI(FirebaseUser currUser) {
+        signUp.setEnabled(true);
+        if(currUser != null) {
+            Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra("displayName", currUser.getDisplayName());
+            startActivity(intent);
+        }
     }
 
     public boolean validate() {
@@ -121,18 +172,4 @@ public class SignInActivity extends AppCompatActivity {
 
         return valid;
     }
-
-    public void onLoginFailed() {
-        Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_SHORT).show();
-        signUp.setEnabled(true);
-    }
-
-    public void onLoginSuccess() {
-        signUp.setEnabled(true);
-        Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        startActivity(intent);
-        overridePendingTransition(0,0);
-    }
-
 }

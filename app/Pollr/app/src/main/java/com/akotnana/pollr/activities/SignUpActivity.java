@@ -2,6 +2,7 @@ package com.akotnana.pollr.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +18,12 @@ import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.DataStorage;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONObject;
@@ -31,6 +38,8 @@ public class SignUpActivity extends AppCompatActivity {
 
     public String TAG = "SignUpActivity";
 
+    private FirebaseAuth mAuth;
+
     EditText username;
     EditText password;
     EditText email;
@@ -41,6 +50,8 @@ public class SignUpActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
+
+        mAuth = FirebaseAuth.getInstance();
 
         username = (EditText) findViewById(R.id.username_edit_text);
         password = (EditText) findViewById(R.id.password_edit_text);
@@ -60,7 +71,8 @@ public class SignUpActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!validate()) {
-                    onSignUpFailed();
+                    Toast.makeText(SignUpActivity.this, "Authentication failed.",
+                            Toast.LENGTH_SHORT).show();
                     return;
                 }
                 signUp.setEnabled(false);
@@ -69,29 +81,30 @@ public class SignUpActivity extends AppCompatActivity {
                 progressDialog.setIndeterminate(true);
                 progressDialog.setMessage("Authenticating...");
                 progressDialog.show();
-                BackendUtils.doPostRequest("/api/v1/register", new HashMap<String, String>() {{
-                    put("username", username.getText().toString());
-                    String pass = password.getText().toString();
-                    try {
-                        pass = new DataStorage(getApplicationContext()).md5(pass);
-                    } catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                    }
-                    put("password", pass);
-                    put("firebase_id", finalRealToken);
-                }}, new VolleyCallback() {
-                    @Override
-                    public void onSuccess(String result) {
-                        new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
-                        onSignUpSuccess();
-                        progressDialog.dismiss();
-                    }
+                mAuth.createUserWithEmailAndPassword(email.getText().toString(), password.getText().toString())
+                        .addOnCompleteListener(SignUpActivity.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    // Sign in success, update UI with the signed-in user's information
+                                    Log.d(TAG, "createUserWithEmail:success");
+                                    FirebaseUser user = mAuth.getCurrentUser();
+                                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                            .setDisplayName(username.getText().toString())
+                                            .build();
+                                    user.updateProfile(profileUpdates);
+                                    updateUI(user);
+                                } else {
+                                    // If sign in fails, display a message to the user.
+                                    Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                                    Toast.makeText(SignUpActivity.this, "Authentication failed.",
+                                            Toast.LENGTH_SHORT).show();
+                                    updateUI(null);
+                                }
 
-                    @Override
-                    public void onError(VolleyError error) {
-
-                    }
-                }, getApplicationContext());
+                                // ...
+                            }
+                        });
             }
         });
 
@@ -105,6 +118,15 @@ public class SignUpActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+    public void updateUI(FirebaseUser currUser) {
+        signUp.setEnabled(true);
+        if(currUser != null) {
+            Intent intent = new Intent(getApplicationContext(), ProfileEditActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
     }
 
     public boolean validate() {
