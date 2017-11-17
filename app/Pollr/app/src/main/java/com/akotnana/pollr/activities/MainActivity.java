@@ -52,11 +52,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onSuccess(JSONObject result) {
-
-            }
-
-            @Override
             public void onError(VolleyError error) {
                 getRequest.setText("Bad request");
                 getRequest.setVisibility(View.VISIBLE);
@@ -79,11 +74,6 @@ public class MainActivity extends AppCompatActivity {
                 postRequest.setText(result.toString());
                 postRequest.setVisibility(View.VISIBLE);
                 post.setVisibility(GONE);
-            }
-
-            @Override
-            public void onSuccess(JSONObject result) {
-
             }
 
             @Override
