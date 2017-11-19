@@ -213,12 +213,13 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
                 progressDialog.setIndeterminate(true);
                 progressDialog.setMessage("Joining...");
                 progressDialog.show();
+                //new DataStorage(getApplicationContext()).storeData("dob", dob.getText().toString());
                 BackendUtils.doPostRequest("/api/v1/user_profile", new HashMap<String, String>() {{
                     put("name", name.getText().toString());
                     put("race", race.getText().toString());
                     put("auth_token", new DataStorage(getApplicationContext()).getData("auth_token"));
                     put("district", zip_code.getText().toString());
-                    put("age", String.valueOf(age));
+                    put("age", String.valueOf(age) + "*" + dob.getText().toString());
                     put("income", income.getText().toString());
                     put("gender", gender.getText().toString());
                 }}, new VolleyCallback() {
@@ -448,7 +449,7 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
         return valid;
     }
 
-    public static int getAge(Calendar dob) {
+    public int getAge(Calendar dob) {
         int age = 0;
         Calendar now = Calendar.getInstance();
         if (dob.after(now)) {

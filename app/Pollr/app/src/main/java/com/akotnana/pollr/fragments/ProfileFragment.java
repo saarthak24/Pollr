@@ -224,7 +224,7 @@ public class ProfileFragment extends Fragment implements DatePickerDialog.OnDate
                     put("race", race.getText().toString());
                     put("auth_token", new DataStorage(getContext()).getData("auth_token"));
                     put("district", zip_code.getText().toString());
-                    put("age", String.valueOf(age));
+                    put("age", String.valueOf(age) + "*" + dob.getText().toString());
                     put("income", income.getText().toString());
                     put("gender", gender.getText().toString());
                 }}, new VolleyCallback() {
@@ -719,11 +719,8 @@ public class ProfileFragment extends Fragment implements DatePickerDialog.OnDate
                     object = new JSONObject(result);
                     name.setText(titleCase(object.getString("name")));
                     nameDisplay.setText(titleCase(object.getString("name")));
-                    DateFormat dateFormat = new SimpleDateFormat("MM-dd-YYYY");
-                    Calendar cal = Calendar.getInstance();
-                    age = Integer.parseInt(object.getString("age"));
-                    cal.add(Calendar.YEAR, -age);
-                    dob.setText(dateFormat.format(cal.getTime()));
+                    age = Integer.parseInt(object.getString("age").split("\\*")[0]);
+                    dob.setText(object.getString("age").split("\\*")[1]);
                     gender.setText(object.getString("gender"));
                     zip_code.setText(object.getString("district"));
                     income.setText(object.getString("income"));

@@ -2,6 +2,7 @@ package com.akotnana.pollr.fragments;
 
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -25,6 +26,7 @@ import android.widget.Toast;
 
 import com.akotnana.pollr.R;
 import com.akotnana.pollr.activities.CustomVerificationFlowActivity;
+import com.akotnana.pollr.activities.ProfileEditActivity;
 import com.akotnana.pollr.activities.SignInActivity;
 import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.Config;
@@ -33,6 +35,11 @@ import com.akotnana.pollr.utils.Poll;
 import com.akotnana.pollr.utils.RVAdapter;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.microblink.activity.ScanActivity;
 import com.microblink.hardware.camera.CameraType;
 import com.microblink.recognizers.BaseRecognitionResult;
@@ -46,7 +53,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
@@ -330,6 +340,12 @@ public class DashboardFragment extends Fragment {
             // make sure BlinkID activity returned result
             if (resultCode == CustomVerificationFlowActivity.RESULT_OK && data != null) {
 
+                final ProgressDialog progressDialog = new ProgressDialog(getActivity(),
+                        R.style.AppTheme_Dark_Dialog);
+                progressDialog.setIndeterminate(true);
+                progressDialog.setMessage("Joining...");
+                progressDialog.show();
+
                 USDLScanResult combinedResult = (USDLScanResult) data.getParcelableExtra(CustomVerificationFlowActivity.EXTRAS_COMBINED_RECOGNITION_RESULT);
                 if (combinedResult != null) {
                     // prepare recognition results for ResultActivity, it accepts RecognitionResults extra
@@ -339,12 +355,41 @@ public class DashboardFragment extends Fragment {
                 }
                 Log.e("DashboardFragment", "Got recognition results!");
 
-                String name = combinedResult.getField(USDLScanResult.kCustomerFullName);
-                String dob = combinedResult.getField(USDLScanResult.kDateOfBirth);
-                String gender = combinedResult.getField(USDLScanResult.kSex);
-                String address = combinedResult.getField(USDLScanResult.kFullAddress);
+                final String name[] = combinedResult.getField(USDLScanResult.kCustomerFullName).split(",");
+                final String fullName = name[1].substring(0,1) + name[1].substring(1).toLowerCase() + " " + name[0].substring(0, 1) + name[0].substring(1).toLowerCase();
+                final String dob = combinedResult.getField(USDLScanResult.kDateOfBirth);
+                String dateOfBirth = dob.substring(0, 2) + "-" + dob.substring(2, 4) + "-" + dob.substring(4);
+                int gen = Integer.parseInt(combinedResult.getField(USDLScanResult.kSex));
+                final String gender = (gen == 1) ? "Male" : "Female";
 
-                Toast.makeText(getContext(), name + "\n" + dob + "\n" + gender + "\n" + address, Toast.LENGTH_LONG).show();
+                Log.d(TAG, fullName + "\n" + dateOfBirth + "\n" + dateOfBirth);
+
+                String[] dobArray = dateOfBirth.split("-");
+                Calendar chosenDate = Calendar.getInstance();
+                chosenDate.set(Calendar.YEAR, Integer.parseInt(dobArray[2]));
+                chosenDate.set(Calendar.MONTH, Integer.parseInt(dobArray[1]));
+                chosenDate.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dobArray[0]));
+                final int age = getAge(chosenDate);
+
+                BackendUtils.doPostRequest("/api/v1/user_profile", new HashMap<String, String>() {{
+                    put("name", fullName);
+                    put("auth_token", new DataStorage(getContext()).getAuthToken());
+                    put("age", String.valueOf(age));
+                    put("gender", gender);
+                }}, new VolleyCallback() {
+                    @Override
+                    public void onSuccess(String result) {
+                        Log.d(TAG, result);
+                        progressDialog.dismiss();
+                    }
+
+                    @Override
+                    public void onError(VolleyError error) {
+
+                    }
+                }, getContext());
+
+                //Toast.makeText(getContext(), name + "\n" + dob + "\n" + gender + "\n" + address, Toast.LENGTH_LONG).show();
 
                 // set intent's component to ResultActivity and pass its contents
                 // to ResultActivity. ResultActivity will show how to extract
@@ -354,9 +399,32 @@ public class DashboardFragment extends Fragment {
             } else {
                 // if BlinkID activity did not return result, user has probably
                 // pressed Back button and cancelled scanning
-                Toast.makeText(getActivity().getApplicationContext(), "Scan cancelled!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity().getApplicationContext(), "Verification cancelled!", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    public int getAge(Calendar dob) {
+        int age = 0;
+        Calendar now = Calendar.getInstance();
+        if (dob.after(now)) {
+            return -1;
+        }
+        int year1 = now.get(Calendar.YEAR);
+        int year2 = dob.get(Calendar.YEAR);
+        age = year1 - year2;
+        int month1 = now.get(Calendar.MONTH);
+        int month2 = dob.get(Calendar.MONTH);
+        if (month2 > month1) {
+            age--;
+        } else if (month1 == month2) {
+            int day1 = now.get(Calendar.DAY_OF_MONTH);
+            int day2 = dob.get(Calendar.DAY_OF_MONTH);
+            if (day2 > day1) {
+                age--;
+            }
+        }
+        return age ;
     }
 
 }

@@ -494,7 +494,7 @@ public class CustomVerificationFlowActivity extends AppCompatActivity implements
             }
         });
 
-        mRecognizerView.setMetadataListener(this, createMetadataSettings(mImageMetadataSettings));
+        //mRecognizerView.setMetadataListener(this, createMetadataSettings(mImageMetadataSettings));
 
         // all activity lifecycle events must be passed on to RecognizerView, this method is called
         // from activity onCreate
