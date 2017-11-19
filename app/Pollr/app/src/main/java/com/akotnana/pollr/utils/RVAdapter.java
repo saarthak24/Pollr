@@ -82,7 +82,7 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PollViewHolder> {
                 intent.putExtra("question", (polls.get(jj).getFullQuestion()));
                 intent.putExtra("type", (polls.get(jj).getPollType()));
                 intent.putExtra("fromNotification", "0");
-                //intent.putExtra("politician", (polls.get(jj).getPolitician()));
+                intent.putExtra("isVerified", (polls.get(jj).canAnswer()));
                 context.startActivity(intent);
             }
         });

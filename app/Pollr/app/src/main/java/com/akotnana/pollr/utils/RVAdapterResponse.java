@@ -68,7 +68,7 @@ public class RVAdapterResponse extends RecyclerView.Adapter<RVAdapterResponse.Re
     @Override
     public void onBindViewHolder(final ResponseViewHolder responseViewHolder, int i) {
         final int jj = i;
-        responseViewHolder.responseShortQuestion.setText(responses.get(i).getShortQuestion());
+        responseViewHolder.responseShortQuestion.setText(responses.get(i).getFullQuestion());
         responseViewHolder.responseAnswer.setText(responses.get(i).getAnswer());
         
     }

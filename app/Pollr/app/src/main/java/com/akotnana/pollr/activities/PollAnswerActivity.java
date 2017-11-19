@@ -26,6 +26,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.akotnana.pollr.R;
 import com.akotnana.pollr.fragments.DashboardFragment;
@@ -70,6 +71,8 @@ public class PollAnswerActivity extends AppCompatActivity {
 
     String answer = "Neutral";
 
+    private boolean isVerified;
+
     public String TAG = "PollAnswerActivity";
 
     @Override
@@ -102,6 +105,19 @@ public class PollAnswerActivity extends AppCompatActivity {
         } else {
             id = (String) savedInstanceState.getSerializable("id");
         }
+
+        String verified = "";
+        if (savedInstanceState == null) {
+            Bundle extras = getIntent().getExtras();
+            if(extras == null) {
+                verified = null;
+            } else {
+                verified = extras.getString("isVerified");
+            }
+        } else {
+            verified = (String) savedInstanceState.getSerializable("isVerified");
+        }
+        this.isVerified = Boolean.parseBoolean(verified);
 
         String fromNotification = "";
         if (savedInstanceState == null) {
@@ -271,37 +287,48 @@ public class PollAnswerActivity extends AppCompatActivity {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                submitButton.setEnabled(false);
-                if(answer.equals("")) {
-                    int selectedId = radioGroup.getCheckedRadioButtonId();
-                    // find the radiobutton by returned id
-                    RadioButton radioButton = (RadioButton) findViewById(selectedId);
-                    answer = radioButton.getText().toString();
-                }
-                BackendUtils.doPostRequest("/api/v1/answer", new HashMap<String, String>() {{
-                    put("auth_token", new DataStorage(getApplicationContext()).getAuthToken());
-                    put("poll_id", finalId1);
-                    put("answer", answer);
-                }}, new VolleyCallback() {
-                    @Override
-                    public void onSuccess(String result) {
-                        Log.d(TAG, result);
-                        new DataStorage(getApplicationContext()).storeData("lastPollAnswered", finalId1);
-                        if(finalFromNotification.equals(0))
-                            finish();
-                        else {
-                            Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                            startActivity(intent);
-                            overridePendingTransition(0,0);
+                if(isVerified) {
+                    submitButton.setEnabled(false);
+                    if (answer.equals("")) {
+                        int selectedId = radioGroup.getCheckedRadioButtonId();
+                        // find the radiobutton by returned id
+                        RadioButton radioButton = (RadioButton) findViewById(selectedId);
+                        answer = radioButton.getText().toString();
+                    }
+                    BackendUtils.doPostRequest("/api/v1/answer", new HashMap<String, String>() {{
+                        put("auth_token", new DataStorage(getApplicationContext()).getAuthToken());
+                        put("poll_id", finalId1);
+                        put("answer", answer);
+                    }}, new VolleyCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, result);
+                            Toast.makeText(getApplicationContext(), "Response submitted!", Toast.LENGTH_LONG).show();
+                            new DataStorage(getApplicationContext()).storeData("lastPollAnswered", finalId1);
+                            if (finalFromNotification.equals(0))
+                                finish();
+                            else {
+                                Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                                startActivity(intent);
+                                overridePendingTransition(0, 0);
+                                finish();
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onError(VolleyError error) {
-                        submitButton.setEnabled(true);
-                    }
-                }, getApplicationContext());
+                        @Override
+                        public void onError(VolleyError error) {
+                            submitButton.setEnabled(true);
+                        }
+                    }, getApplicationContext());
+                } else {
+                    Toast.makeText(getApplicationContext(), "Verification needed!", Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    startActivity(intent);
+                    overridePendingTransition(0, 0);
+                    finish();
+                }
             }
         });
     }

@@ -69,6 +69,7 @@ import static android.view.View.GONE;
 public class DashboardFragment extends Fragment {
 
     public static boolean submitted = false;
+    public static boolean isVerified = false;
 
     public String TAG = "DashboardFragment";
 
@@ -85,8 +86,6 @@ public class DashboardFragment extends Fragment {
     private TextView mEmptyText;
 
     private Snackbar errorSnack;
-
-    private boolean verified = false;
 
     public static final int MY_BLINKID_REQUEST_CODE = 0x101;
 
@@ -142,7 +141,7 @@ public class DashboardFragment extends Fragment {
                                 }, getContext());
 
                                 int i = 0;
-                                while (output.equals("") && i < 50) {
+                                while (output.equals("") && i < 100) {
                                     try {
                                         Thread.sleep(100);
                                         i += 50;
@@ -178,16 +177,20 @@ public class DashboardFragment extends Fragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), R.style.myDialog));
         builder.setTitle("Verification needed");
-        builder.setMessage("Pollr needs to verify your identity and personal details before you can use this app. A personal identification card (i.e Drivers License) is needed to verify your identity.");
+        builder.setMessage("Pollr needs to verify your age using a valid U.S. Driver's License before you can answer polls on this app. Your data will be processed only on your device and will not be shared with anyone.");
         builder.setPositiveButton("Verify", new DialogInterface.OnClickListener() {
             public void onClick(final DialogInterface dialogBox, int id) {
                 getActivity().startActivityForResult(buildScanIntent(buildUSDLCombinedElement()), MY_BLINKID_REQUEST_CODE);
             }
         });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+        builder.setNegativeButton("Cancel",  new DialogInterface.OnClickListener() {
+            public void onClick(final DialogInterface dialogBox, int id) {
+                isVerified = false;
+            }
+        });
 
-        //TODO: remove temp
+        if(!isVerified)
+            builder.show();
 
         rv = (RecyclerView) v.findViewById(R.id.rv);
 
@@ -224,21 +227,16 @@ public class DashboardFragment extends Fragment {
             errorSnack.show();
         } else {
             if(output.equals("{}")) {
-                polls.add(new Poll("The government should raise the federal minimum wage.", "sd", "1"));
-                polls.add(new Poll("The government should make cuts to public spending in order to reduce the national debt.", "sd", "2"));
-                polls.add(new Poll("Should police officers be required to wear body cameras?", "mc", "3"));
+                polls.add(new Poll("The government should raise the federal minimum wage.", "sd", "1", isVerified));
+                polls.add(new Poll("The government should make cuts to public spending in order to reduce the national debt.", "sd", "2", isVerified));
+                polls.add(new Poll("Should police officers be required to wear body cameras?", "mc", "3", isVerified));
             } else {
                 if (errorSnack != null)
                     errorSnack.dismiss();
                 swipeContainer.setVisibility(View.VISIBLE);
-                //parse input and add to polls
-                //TEMP
-                JSONArray jsonarray = null;
-                try {
-                    jsonarray = new JSONArray(input);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                JSONObject object = new JSONObject(input);
+                JSONArray jsonarray = object.getJSONArray("polls");
+                isVerified = Boolean.parseBoolean(object.getString("verified"));
                 String bad = new DataStorage(getContext()).getData("lastPollAnswered");
                 for (int i = 0; i < jsonarray.length(); i++) {
                     JSONObject jsonobject = null;
@@ -259,7 +257,7 @@ public class DashboardFragment extends Fragment {
                         e.printStackTrace();
                     }
                     if (!id.equals(bad))
-                        polls.add(new Poll(question, type, id));
+                        polls.add(new Poll(question, type, id, isVerified));
                 }
             }
         }
@@ -381,6 +379,18 @@ public class DashboardFragment extends Fragment {
                     public void onSuccess(String result) {
                         Log.d(TAG, result);
                         progressDialog.dismiss();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), R.style.myDialog));
+                        if(result.equals("Success")) {
+                            builder.setTitle("Verification successful!");
+                            builder.setMessage("Your date of birth indicates that you are OVER the age of 18, and therefore eligible to answer polls.");
+                            builder.setPositiveButton("OK", null);
+
+                        } else {
+                            builder.setTitle("Verification unsuccessful");
+                            builder.setMessage("Your date of birth indicates you are UNDER the age of 18, and therefore not eligible to answer polls. Feel free to utilize the other services offered by Pollr.");
+                            builder.setPositiveButton("OK", null);
+                        }
+                        builder.show();
                     }
 
                     @Override

@@ -107,7 +107,7 @@ public class ResponseFragment extends Fragment {
 
 
                                 int i = 0;
-                                while (output.equals("") && i < 50) {
+                                while (output.equals("") && i < 100) {
                                     try {
                                         Thread.sleep(100);
                                         i += 50;
