@@ -2,12 +2,18 @@ package com.akotnana.pollr.fragments;
 
 
 import android.app.Activity;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.view.ContextThemeWrapper;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -15,20 +21,31 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.akotnana.pollr.R;
+import com.akotnana.pollr.activities.CustomVerificationFlowActivity;
+import com.akotnana.pollr.activities.SignInActivity;
 import com.akotnana.pollr.utils.BackendUtils;
+import com.akotnana.pollr.utils.Config;
 import com.akotnana.pollr.utils.DataStorage;
 import com.akotnana.pollr.utils.Poll;
 import com.akotnana.pollr.utils.RVAdapter;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
+import com.microblink.activity.ScanActivity;
+import com.microblink.hardware.camera.CameraType;
+import com.microblink.recognizers.BaseRecognitionResult;
+import com.microblink.recognizers.RecognitionResults;
+import com.microblink.recognizers.blinkbarcode.usdl.USDLScanResult;
+import com.microblink.recognizers.blinkid.CombinedRecognizerSettings;
+import com.microblink.recognizers.blinkid.usdl.combined.USDLCombinedRecognizerSettings;
+import com.microblink.view.recognition.RecognitionType;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,6 +75,10 @@ public class DashboardFragment extends Fragment {
     private TextView mEmptyText;
 
     private Snackbar errorSnack;
+
+    private boolean verified = false;
+
+    public static final int MY_BLINKID_REQUEST_CODE = 0x101;
 
     public DashboardFragment() {
         // Required empty public constructor
@@ -110,13 +131,17 @@ public class DashboardFragment extends Fragment {
                                     }
                                 }, getContext());
 
-                                while(output.equals("")) {
+                                int i = 0;
+                                while (output.equals("") && i < 50) {
                                     try {
                                         Thread.sleep(100);
+                                        i += 50;
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
                                 }
+                                if(output.equals(""))
+                                    output = "{}";
 
                                 getActivity().runOnUiThread(
                                         new Runnable() {
@@ -127,7 +152,7 @@ public class DashboardFragment extends Fragment {
                                                 } catch (JSONException e) {
                                                     e.printStackTrace();
                                                 }
-                                                if(adapter != null)
+                                                if (adapter != null)
                                                     initializeAdapter();
                                                 swipeContainer.setRefreshing(false);
                                             }
@@ -141,6 +166,16 @@ public class DashboardFragment extends Fragment {
 
         swipeContainer.setOnRefreshListener(swipeRefreshListner);
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), R.style.myDialog));
+        builder.setTitle("Verification needed");
+        builder.setMessage("Pollr needs to verify your identity and personal details before you can use this app. A personal identification card (i.e Drivers License) is needed to verify your identity.");
+        builder.setPositiveButton("Verify", new DialogInterface.OnClickListener() {
+            public void onClick(final DialogInterface dialogBox, int id) {
+                getActivity().startActivityForResult(buildScanIntent(buildUSDLCombinedElement()), MY_BLINKID_REQUEST_CODE);
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
 
         //TODO: remove temp
 
@@ -168,7 +203,7 @@ public class DashboardFragment extends Fragment {
         adapter.clear();
         adapter.notifyDataSetChanged();
         Log.d(TAG, input);
-        if(input.equals("") || input.length() < 5) {
+        if (input.equals("")) {
             errorSnack = Snackbar.make(((Activity) getContext()).findViewById(android.R.id.content), "No polls currently available. Swipe down to check!", Snackbar.LENGTH_INDEFINITE);
             errorSnack.setAction("Dismiss", new View.OnClickListener() {
                 @Override
@@ -178,43 +213,49 @@ public class DashboardFragment extends Fragment {
             });
             errorSnack.show();
         } else {
-            if(errorSnack != null)
-                errorSnack.dismiss();
-            swipeContainer.setVisibility(View.VISIBLE);
-            //parse input and add to polls
-            //TEMP
-            JSONArray jsonarray = null;
-            try {
-                jsonarray = new JSONArray(input);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            String bad = new DataStorage(getContext()).getData("lastPollAnswered");
-            for (int i = 0; i < jsonarray.length(); i++) {
-                JSONObject jsonobject = null;
+            if(output.equals("{}")) {
+                polls.add(new Poll("The government should raise the federal minimum wage.", "sd", "1"));
+                polls.add(new Poll("The government should make cuts to public spending in order to reduce the national debt.", "sd", "2"));
+                polls.add(new Poll("Should police officers be required to wear body cameras?", "mc", "3"));
+            } else {
+                if (errorSnack != null)
+                    errorSnack.dismiss();
+                swipeContainer.setVisibility(View.VISIBLE);
+                //parse input and add to polls
+                //TEMP
+                JSONArray jsonarray = null;
                 try {
-                    jsonobject = jsonarray.getJSONObject(i);
+                    jsonarray = new JSONArray(input);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                String id = "";
-                String question = "";
-                String type = "";
+                String bad = new DataStorage(getContext()).getData("lastPollAnswered");
+                for (int i = 0; i < jsonarray.length(); i++) {
+                    JSONObject jsonobject = null;
+                    try {
+                        jsonobject = jsonarray.getJSONObject(i);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    String id = "";
+                    String question = "";
+                    String type = "";
 
-                try {
-                    id = jsonobject.getString("id");
-                    question = jsonobject.getString("question");
-                    type = jsonobject.getString("type");
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    try {
+                        id = jsonobject.getString("id");
+                        question = jsonobject.getString("question");
+                        type = jsonobject.getString("type");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    if (!id.equals(bad))
+                        polls.add(new Poll(question, type, id));
                 }
-                if(!id.equals(bad))
-                    polls.add(new Poll(question, type, id));
             }
         }
     }
 
-    private void initializeAdapter(){
+    private void initializeAdapter() {
         adapter = new RVAdapter(polls, getContext());
         rv.setAdapter(adapter);
     }
@@ -249,7 +290,7 @@ public class DashboardFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        if(errorSnack != null)
+        if (errorSnack != null)
             errorSnack.dismiss();
         mListener = null;
     }
@@ -258,5 +299,65 @@ public class DashboardFragment extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
+
+
+    ///////////////////////////////////////////////
+
+
+    private Intent buildScanIntent(CombinedRecognizerSettings combinedRecognizerSettings) {
+        Intent intent = new Intent(getActivity(), CustomVerificationFlowActivity.class);
+        intent.putExtra(CustomVerificationFlowActivity.EXTRAS_LICENSE_KEY, Config.LICENSE_KEY);
+        intent.putExtra(CustomVerificationFlowActivity.EXTRAS_COMBINED_RECOGNIZER_SETTINGS, combinedRecognizerSettings);
+        intent.putExtra(CustomVerificationFlowActivity.EXTRAS_COMBINED_CAMERA_TYPE, (Parcelable) CameraType.CAMERA_BACKFACE);
+        return intent;
+    }
+
+    private CombinedRecognizerSettings  buildUSDLCombinedElement() {
+        USDLCombinedRecognizerSettings usdlCombined = new USDLCombinedRecognizerSettings();
+        return usdlCombined;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // onActivityResult is called whenever we are returned from activity started
+        // with startActivityForResult. We need to check request code to determine
+        // that we have really returned from BlinkID activity.
+        if (requestCode == MY_BLINKID_REQUEST_CODE) {
+
+            // make sure BlinkID activity returned result
+            if (resultCode == CustomVerificationFlowActivity.RESULT_OK && data != null) {
+
+                USDLScanResult combinedResult = (USDLScanResult) data.getParcelableExtra(CustomVerificationFlowActivity.EXTRAS_COMBINED_RECOGNITION_RESULT);
+                if (combinedResult != null) {
+                    // prepare recognition results for ResultActivity, it accepts RecognitionResults extra
+                    data.putExtra(ScanActivity.EXTRAS_RECOGNITION_RESULTS, new RecognitionResults(new BaseRecognitionResult[]{combinedResult}, RecognitionType.SUCCESSFUL));
+                } else {
+                    Log.e("DashboardFragment", "Unable to retrieve recognition results!");
+                }
+                Log.e("DashboardFragment", "Got recognition results!");
+
+                String name = combinedResult.getField(USDLScanResult.kCustomerFullName);
+                String dob = combinedResult.getField(USDLScanResult.kDateOfBirth);
+                String gender = combinedResult.getField(USDLScanResult.kSex);
+                String address = combinedResult.getField(USDLScanResult.kFullAddress);
+
+                Toast.makeText(getContext(), name + "\n" + dob + "\n" + gender + "\n" + address, Toast.LENGTH_LONG).show();
+
+                // set intent's component to ResultActivity and pass its contents
+                // to ResultActivity. ResultActivity will show how to extract
+                // data from result.
+                //data.setComponent(new ComponentName(this, ResultActivity.class));
+                //startActivity(data);
+            } else {
+                // if BlinkID activity did not return result, user has probably
+                // pressed Back button and cancelled scanning
+                Toast.makeText(getActivity().getApplicationContext(), "Scan cancelled!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
 }
 

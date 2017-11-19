@@ -21,13 +21,14 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-
+    //compile project(':LibBlinkID')
     compile 'com.android.support:multidex:1.0.0'
     compile 'com.android.support:appcompat-v7:26.0.2'
+    compile "com.android.support:percent:26.0.2"
     compile 'com.android.support:design:26.0.2'
     compile 'com.android.support:support-v4:26.0.2'
     compile 'com.android.support:support-v13:26.0.2'
@@ -41,6 +42,12 @@ dependencies {
     compile 'com.android.volley:volley:1.0.0'
     compile 'com.github.lawloretienne:discreteslider:0.0.9'
     compile 'com.wdullaer:materialdatetimepicker:3.3.1'
+    compile 'de.hdodenhof:circleimageview:2.1.0'
+    compile 'jp.wasabeef:blurry:2.1.1'
+    compile('com.microblink:blinkid:3.12.0@aar') {
+        transitive = true
+    }
     testCompile 'junit:junit:4.12'
+
 }
 apply plugin: 'com.google.gms.google-services'

@@ -1,14 +1,21 @@
 package com.akotnana.pollr.activities;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.view.ContextThemeWrapper;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,14 +39,19 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
+import jp.wasabeef.blurry.Blurry;
+
 public class SignInActivity extends AppCompatActivity {
 
     public String TAG = "SignInActivity";
 
     private FirebaseAuth mAuth;
 
+    ImageView backgroundView;
+
     EditText username;
     EditText password;
+    TextView forgotPassword;
     Button signIn;
     LinearLayout signUp;
 
@@ -55,6 +67,55 @@ public class SignInActivity extends AppCompatActivity {
         signIn = (Button) findViewById(R.id.login_button);
         signUp = (LinearLayout) findViewById(R.id.sign_up_link);
 
+        forgotPassword = (TextView) findViewById(R.id.forgot_password);
+
+        forgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LayoutInflater layoutInflaterAndroid = LayoutInflater.from(getApplicationContext());
+                View mView = layoutInflaterAndroid.inflate(R.layout.email_input_dialog, null);
+                AlertDialog.Builder alertDialogBuilderUserInput = new AlertDialog.Builder(new ContextThemeWrapper(SignInActivity.this, R.style.myDialog));
+                alertDialogBuilderUserInput.setView(mView);
+
+                final EditText userInputDialogEditText = (EditText) mView.findViewById(R.id.email_question);
+                alertDialogBuilderUserInput
+                        .setCancelable(false)
+                        .setPositiveButton("Send", new DialogInterface.OnClickListener() {
+                            public void onClick(final DialogInterface dialogBox, int id) {
+                                if(!userInputDialogEditText.getText().toString().equals("")) {
+                                    mAuth.sendPasswordResetEmail(userInputDialogEditText.getText().toString())
+                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        Log.d(TAG, "Email sent.");
+                                                        Toast.makeText(getApplicationContext(), "Email sent.", Toast.LENGTH_SHORT).show();
+                                                        dialogBox.cancel();
+                                                    } else {
+                                                        Log.d(TAG, "Email not sent.");
+                                                        Toast.makeText(getApplicationContext(), "Incorrect email.", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+                                            });
+                                }
+                            }
+                        })
+
+                        .setNegativeButton("Cancel",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialogBox, int id) {
+                                        dialogBox.cancel();
+                                    }
+                                });
+
+                AlertDialog alertDialogAndroid = alertDialogBuilderUserInput.create();
+                alertDialogAndroid.show();
+            }
+        });
+
+        backgroundView = (ImageView) findViewById(R.id.hello_world);
+        //Blurry.with(getApplicationContext()).radius(25).sampling(2).from(((BitmapDrawable) getResources().getDrawable(R.drawable.background1)).getBitmap()).into(backgroundView);
+
         signIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -63,7 +124,7 @@ public class SignInActivity extends AppCompatActivity {
                             Toast.LENGTH_SHORT).show();
                     return;
                 }
-                signUp.setEnabled(false);
+                signIn.setEnabled(false);
                 final ProgressDialog progressDialog = new ProgressDialog(SignInActivity.this,
                         R.style.AppTheme_Dark_Dialog);
                 progressDialog.setIndeterminate(true);
@@ -76,21 +137,10 @@ public class SignInActivity extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     // Sign in success, update UI with the signed-in user's information
                                     Log.d(TAG, "signInWithEmail:success");
-                                    FirebaseUser currentUser = mAuth.getCurrentUser();
-                                    currentUser.getToken(true)
-                                            .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
-                                                public void onComplete(@NonNull Task<GetTokenResult> task) {
-                                                    if (task.isSuccessful()) {
-                                                        String idToken = task.getResult().getToken();
-                                                        new DataStorage(getApplicationContext()).storeData("firebaseIdToken", idToken);
-                                                        //TODO: Send rahul some joints
-                                                    } else {
-                                                        FirebaseCrash.report(task.getException());
-                                                    }
-                                                }
-                                            });
+                                    String idToken = new DataStorage(getApplicationContext()).getAuthToken();
+                                    //TODO: sned rahul jaunts
                                     progressDialog.dismiss();
-                                    updateUI(currentUser);
+                                    updateUI(mAuth.getCurrentUser());
                                 } else {
                                     progressDialog.dismiss();
                                     // If sign in fails, display a message to the user.
@@ -108,12 +158,15 @@ public class SignInActivity extends AppCompatActivity {
 
         signUp = (LinearLayout) findViewById(R.id.sign_up_link);
 
-        signUp.setOnClickListener(new View.OnClickListener() {
+        signUp.setOnTouchListener(new View.OnTouchListener() {
+
             @Override
-            public void onClick(View view) {
+            public boolean onTouch(View view, MotionEvent motionEvent) {
                 Intent intent = new Intent(getApplicationContext(),SignUpActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
+                finish();
+                return false;
             }
         });
     }
@@ -123,30 +176,19 @@ public class SignInActivity extends AppCompatActivity {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if(currentUser != null) {
-            currentUser.getToken(true)
-                    .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
-                        public void onComplete(@NonNull Task<GetTokenResult> task) {
-                            if (task.isSuccessful()) {
-                                String idToken = task.getResult().getToken();
-                                new DataStorage(getApplicationContext()).storeData("firebaseIdToken", idToken);
-                                //TODO: Send rahul some joints
-                            } else {
-                                FirebaseCrash.report(task.getException());
-                            }
-                        }
-                    });
-        }
+        String idToken = new DataStorage(getApplicationContext()).getAuthToken();
+        //TODO: sned rahul jaunts
         updateUI(currentUser);
     }
 
     public void updateUI(FirebaseUser currUser) {
-        signUp.setEnabled(true);
+        signIn.setEnabled(true);
         if(currUser != null) {
             Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.putExtra("displayName", currUser.getDisplayName());
             startActivity(intent);
+            finish();
         }
     }
 
@@ -156,8 +198,8 @@ public class SignInActivity extends AppCompatActivity {
         String username = this.username.getText().toString();
         String password = this.password.getText().toString();
 
-        if (username.isEmpty()) {
-            this.username.setError("enter a valid username");
+        if (username.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(username).matches()) {
+            this.username.setError("enter a valid email address");
             valid = false;
         } else {
             this.username.setError(null);

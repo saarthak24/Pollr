@@ -7,6 +7,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
         android:name="android.support.multidex.MultiDexApplication"
@@ -64,6 +70,18 @@
             </intent-filter>
         </service>
 
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.akotnana.pollr.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/image_path" />
+        </provider>
+
+
         <activity
             android:name=".activities.ProfileEditActivity"
             android:configChanges="orientation|keyboardHidden"
@@ -80,6 +98,12 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
             ></activity>
+
+        <activity android:name=".activities.CustomVerificationFlowActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/AppTheme.NoActionBar1"/>
+
     </application>
 
 </manifest>

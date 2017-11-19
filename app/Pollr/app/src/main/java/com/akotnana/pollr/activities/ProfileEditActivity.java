@@ -5,8 +5,18 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.ContactsContract;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.FileProvider;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,23 +27,37 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.akotnana.pollr.R;
 import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.DataStorage;
+import com.akotnana.pollr.utils.RoundRectCornerImageView;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.crash.FirebaseCrash;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.NoSuchAlgorithmException;
@@ -44,11 +68,19 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
+import jp.wasabeef.blurry.Blurry;
+
 import static android.view.View.GONE;
+import static com.akotnana.pollr.utils.DataStorage.decodeSampledBitmapFromFile;
 
 public class ProfileEditActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener {
 
     public String TAG = "ProfileEditActivity";
+
+    private static final int CAMERA_REQUEST = 1888;
+    private static final String CAPTURE_IMAGE_FILE_PROVIDER = "com.akotnana.pollr.fileprovider";
+
+    private StorageReference mStorageRef;
 
     public Location myLocation;
 
@@ -58,10 +90,16 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
     EditText race;
     EditText income;
     EditText zip_code;
+    RoundRectCornerImageView imageView;
+    ImageView backgroundView;
+    FloatingActionButton fab;
 
     int age = 0;
+    Uri imageUri;
 
     Button join;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +113,14 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
         gender = (EditText) findViewById(R.id.gender_edit_text);
         race = (EditText) findViewById(R.id.race_edit_text);
         income = (EditText) findViewById(R.id.income_edit_text);
+        backgroundView = (ImageView) findViewById(R.id.hello_world);
         zip_code = (EditText) findViewById(R.id.location_edit_text);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        imageView = (RoundRectCornerImageView) findViewById(R.id.profile_picture);
+
+        mStorageRef = FirebaseStorage.getInstance().getReference();
+
+        //Blurry.with(getApplicationContext()).radius(25).sampling(2).from(((BitmapDrawable) getResources().getDrawable(R.drawable.background1)).getBitmap()).into(backgroundView);
 
         setupGenderSpinner();
         setupIncomeSpinner();
@@ -179,7 +224,29 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
                 }}, new VolleyCallback() {
                     @Override
                     public void onSuccess(String result) {
+                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                         //new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
+                        if(imageUri == null) {
+                            if(gender.getText().toString().equals("Male"))
+                                imageUri = Uri.parse("android.resource://your.package.name/" + R.drawable.male);
+                            else
+                                imageUri = Uri.parse("android.resource://your.package.name/" + R.drawable.female);
+                        }
+
+                        new DataStorage(getApplicationContext()).storeData("imageURI", imageUri.toString());
+
+                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                .setPhotoUri(imageUri)
+                                .build();
+                        user.updateProfile(profileUpdates)
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (task.isSuccessful()) {
+                                            Log.d(TAG, "User profile updated.");
+                                        }
+                                    }
+                                });
                         onSignUpSuccess();
                         progressDialog.dismiss();
                     }
@@ -192,51 +259,145 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
             }
         });
 
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                takeImageFromCamera(view);
+            }
+        });
+
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode,
-                                    int resultCode, Intent data) {
+    public void takeImageFromCamera(View view) {
+        int MY_CAMERA_REQUEST_CODE = 100;
 
-        if (requestCode == 1337
-                && resultCode == Activity.RESULT_OK) {
-
-            final Place place = PlacePicker.getPlace(this, data);
-            Log.d("location", place.getAddress().toString());
-            String address = "";
-            try {
-                address = URLEncoder.encode(place.getAddress().toString(), "utf-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            final String finalAddress = address;
-            BackendUtils.doCustomGetRequest("http://api.geocod.io/v1/geocode", new HashMap<String, String>() {{
-                put("q", finalAddress);
-                put("fields", "cd");
-                put("api_key", "eef7a5fdc404d4fb45f5efa47cd4570fc70f8a4");
-
-            }}, new VolleyCallback() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d("location", result);
-                    int i = result.indexOf("district_number");
-                    Log.d(TAG, result.substring(i + 17, i + 20).split(",")[0]);
-                    String districtNumber = result.substring(i + 17, i + 20).split(",")[0];
-                    i = result.indexOf("state");
-                    Log.d(TAG, result.substring(i + 7, i + 11).split(",")[0]);
-                    String state = result.substring(i + 7, i + 11).split(",")[0].replace("\"", "");
-                    zip_code.setText(state + districtNumber);
-                }
-
-                @Override
-                public void onError(VolleyError error) {
-
-                }
-            }, getApplicationContext());
-
+        if (getApplicationContext().checkSelfPermission(Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA},
+                    MY_CAMERA_REQUEST_CODE);
         } else {
-            super.onActivityResult(requestCode, resultCode, data);
+            File path = new File(getApplicationContext().getFilesDir(), "pollr_images/");
+            if (!path.exists()) path.mkdirs();
+            File image = new File(path, "image.jpg");
+            image.delete();
+            imageUri = FileProvider.getUriForFile(ProfileEditActivity.this, CAPTURE_IMAGE_FILE_PROVIDER, image);
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+            startActivityForResult(intent, CAMERA_REQUEST);
+        }
+    }
+
+    @Override
+
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == 100) {
+
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                takeImageFromCamera(fab);
+
+            }
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode,
+                                 int resultCode, Intent data) {
+        Log.d("requestCode", String.valueOf(requestCode));
+        Log.d("RESULT_OK", String.valueOf(resultCode== Activity.RESULT_OK));
+        if (requestCode == CAMERA_REQUEST) {
+            if (resultCode == Activity.RESULT_OK) {
+
+                Log.d("TAG","refreshing the image!!!!");
+
+                File path = new File(getApplicationContext().getFilesDir(), "pollr_images/");
+                if (!path.exists()) path.mkdirs();
+                File imageFile = new File(path, "image.jpg");
+                Uri file = Uri.fromFile(imageFile);
+
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                FirebaseStorage storage = FirebaseStorage.getInstance();
+                StorageReference storageReference = storage.getReferenceFromUrl("gs://pollr-89a97.appspot.com").child(user.getUid() + ".jpg");
+                storageReference.putFile(file)
+                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                // Get a URL to the uploaded content
+                                @SuppressWarnings("VisibleForTests") Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                Log.d("ProfileEditActivity", "" + downloadUrl.toString());
+                                Toast.makeText(getApplicationContext(), "Image saved!", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                Log.d("ProfileEditActivity", "image NOT sent");
+                                Toast.makeText(getApplicationContext(), "Image not saved!", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+        /*View headerView = navigationView.inflateHeaderView(R.layout.nav_header);
+        CircleImageView imageView = headerView.findViewById(R.id.materialup_profile_image);*/
+
+
+                // use imageFile to open your image
+                Log.d("ProfileEditActivity", "" + imageFile.exists());
+                if(imageFile.exists()) {
+                    Bitmap bitmap = decodeSampledBitmapFromFile(imageFile.getAbsolutePath(), 1000, 700);
+                    Drawable d = new BitmapDrawable(getResources(), bitmap);
+                    imageView.setImageDrawable(d);
+                } else if(!new DataStorage(getApplicationContext()).getData("imageURI").equals("")){
+                    Uri imageURI1 = Uri.parse(new DataStorage(getApplicationContext()).getData("imageURI"));
+                    //imageView.setImageURI(null);
+                    imageView.setImageURI(imageURI1);
+                }
+
+
+            }
+        } else if (requestCode == 1337 && resultCode == Activity.RESULT_OK){
+            if(data != null) {
+                try {
+                    final Place place = PlacePicker.getPlace(ProfileEditActivity.this, data);
+                    Log.d("location", place.getAddress().toString());
+                    String address = "";
+                    try {
+                        address = URLEncoder.encode(place.getAddress().toString(), "utf-8");
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                    final String finalAddress = address;
+                    BackendUtils.doCustomGetRequest("http://api.geocod.io/v1/geocode", new HashMap<String, String>() {{
+                        put("q", finalAddress);
+                        put("fields", "cd");
+                        put("api_key", "eef7a5fdc404d4fb45f5efa47cd4570fc70f8a4");
+
+                    }}, new VolleyCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d("location", result);
+                            int i = result.indexOf("district_number");
+                            Log.d("goat", result.substring(i + 17, i + 20).split(",")[0]);
+                            String districtNumber = result.substring(i + 17, i + 20).split(",")[0];
+                            i = result.indexOf("state");
+                            Log.d("goat", result.substring(i + 7, i + 11).split(",")[0]);
+                            String state = result.substring(i + 7, i + 11).split(",")[0].replace("\"", "");
+                            zip_code.setText(state + districtNumber);
+
+                        }
+
+                        @Override
+                        public void onError(VolleyError error) {
+
+                        }
+                    }, getApplicationContext());
+                } catch (Exception e) {
+                    FirebaseCrash.report(e);
+                }
+            }
         }
     }
 
@@ -382,6 +543,19 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
             @Override
             public void onItemSelected(AdapterView<?> parent, View view,int position, long id) {
                 gender_input.setText(spinnerSubject.getSelectedItem().toString()); //this is taking the first value of the spinner by default.
+
+                File path = new File(getFilesDir(), "pollr_images/");
+                if (!path.exists()) path.mkdirs();
+                File imageFile = new File(path, "image.jpg");
+                // use imageFile to open your image
+                Log.d("ProfileEditActivity", "" + imageFile.exists());
+                if(!imageFile.exists()) {
+                    if (gender_input.getText().toString().equals("Male"))
+                        imageView.setImageDrawable((getResources().getDrawable(R.drawable.male)));
+                    else if (gender_input.getText().toString().equals("Female"))
+                        imageView.setImageDrawable((getResources().getDrawable(R.drawable.female)));
+                }
+
             }
 
             @Override

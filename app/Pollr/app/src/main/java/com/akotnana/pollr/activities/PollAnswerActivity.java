@@ -185,57 +185,85 @@ public class PollAnswerActivity extends AppCompatActivity {
             slider.setVisibility(View.VISIBLE);
             multipleChoice.setVisibility(GONE);
         } else {
+            if(String.valueOf(id).length() < 2) {
+                String[] arr = new String[]{"Yes", "No", "Other option"};
 
-            Log.d(TAG, "MC startme");
-            final String finalId = id;
-            BackendUtils.doGetRequest("/api/v1/getpoll", new HashMap<String, String>() {{
-                Log.d(TAG,  new DataStorage(getApplicationContext()).getData("auth_token"));
-                put("auth_token", new DataStorage(getApplicationContext()).getData("auth_token"));
-                put("poll_id", finalId);
-            }}, new VolleyCallback() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d(TAG, result);
-                    JSONObject object = null;
-                    String hello = null;
-                    try {
-                        object = new JSONObject(result);
-                        hello = object.getString("choices");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    String[] arr = hello.substring(1, hello.length()-1).split(", ");
+                for (int i = 0; i < arr.length; i++) {
+                    RadioButton butt = new RadioButton(getApplicationContext());
+                    butt.setText(arr[i]);
+                    butt.setTextSize(18f);
+                    butt.setPadding(0, 30, 0, 30);
+                    ColorStateList colorStateList = new ColorStateList(
+                            new int[][]{
+                                    new int[]{-android.R.attr.state_checked},
+                                    new int[]{android.R.attr.state_checked}
+                            },
+                            new int[]{
 
-                    for (int i = 0; i < arr.length; i++) {
-                        RadioButton butt = new RadioButton(getApplicationContext());
-                        butt.setText(arr[i]);
-                        butt.setTextSize(18f);
-                        butt.setPadding(0, 30, 0, 30);
-                        ColorStateList colorStateList = new ColorStateList(
-                                new int[][]{
-                                        new int[]{-android.R.attr.state_checked},
-                                        new int[]{android.R.attr.state_checked}
-                                },
-                                new int[]{
-
-                                        Color.DKGRAY
-                                        , getResources().getColor(R.color.colorPrimary),
-                                }
-                        );
-                        butt.setButtonTintList(colorStateList);
-                        if(!arr[i].isEmpty())
-                            radioGroup.addView(butt);
-                    }
-                    bore.setVisibility(GONE);
-                    slider.setVisibility(GONE);
-                    multipleChoice.setVisibility(View.VISIBLE);
+                                    Color.DKGRAY
+                                    , getResources().getColor(R.color.colorPrimary),
+                            }
+                    );
+                    butt.setButtonTintList(colorStateList);
+                    if (!arr[i].isEmpty())
+                        radioGroup.addView(butt);
                 }
+                bore.setVisibility(GONE);
+                slider.setVisibility(GONE);
+                multipleChoice.setVisibility(View.VISIBLE);
+            } else {
+                Log.d(TAG, "MC startme");
+                final String finalId = id;
+                BackendUtils.doGetRequest("/api/v1/getpoll", new HashMap<String, String>() {{
+                    Log.d(TAG, new DataStorage(getApplicationContext()).getData("auth_token"));
+                    put("auth_token", new DataStorage(getApplicationContext()).getData("auth_token"));
+                    put("poll_id", finalId);
+                }}, new VolleyCallback() {
+                    @Override
+                    public void onSuccess(String result) {
+                        Log.d(TAG, result);
+                        JSONObject object = null;
+                        String hello = null;
+                        try {
+                            object = new JSONObject(result);
+                            hello = object.getString("choices");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        String[] arr = hello.substring(1, hello.length() - 1).split(", ");
 
-                @Override
-                public void onError(VolleyError error) {
+                        for (int i = 0; i < arr.length; i++) {
+                            RadioButton butt = new RadioButton(getApplicationContext());
+                            butt.setText(arr[i]);
+                            butt.setTextSize(18f);
+                            butt.setPadding(0, 30, 0, 30);
+                            ColorStateList colorStateList = new ColorStateList(
+                                    new int[][]{
+                                            new int[]{-android.R.attr.state_checked},
+                                            new int[]{android.R.attr.state_checked}
+                                    },
+                                    new int[]{
 
-                }
-            }, getApplicationContext());
+                                            Color.DKGRAY
+                                            , getResources().getColor(R.color.colorPrimary),
+                                    }
+                            );
+                            butt.setButtonTintList(colorStateList);
+                            if (!arr[i].isEmpty())
+                                radioGroup.addView(butt);
+                        }
+                        bore.setVisibility(GONE);
+                        slider.setVisibility(GONE);
+                        multipleChoice.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onError(VolleyError error) {
+
+                    }
+                }, getApplicationContext());
+            }
+
         }
 
         final String finalId1 = id;

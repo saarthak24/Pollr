@@ -6,11 +6,12 @@
     android:paddingBottom="0dp">
 
     <ImageView
+        android:id="@+id/hello_world"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="top"
         android:scaleType="centerCrop"
-        android:src="@drawable/background1"
+        android:src="@drawable/background4"
         android:tint="@color/colorPrimary"
         android:tintMode="multiply" />
 
@@ -27,6 +28,7 @@
             android:layout_marginBottom="15dp"
             android:layout_marginTop="15dp"
             android:layout_weight="5"
+            android:padding="20dp"
             android:scaleType="fitCenter"
             android:src="@drawable/logo1" />
 
@@ -50,12 +52,12 @@
                         android:id="@+id/username_edit_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:drawableLeft="@drawable/ic_person_white_24dp"
+                        android:drawableLeft="@drawable/ic_email_white_24dp"
                         android:drawablePadding="10dp"
-                        android:drawableStart="@drawable/ic_person_white_24dp"
-                        android:hint="Username"
+                        android:drawableStart="@drawable/ic_email_white_24dp"
+                        android:hint="Email"
                         android:imeOptions="actionNext"
-                        android:inputType="text"
+                        android:inputType="textEmailAddress"
                         android:textColor="@color/white"
                         android:textColorHint="@color/white"
                         android:textSize="16sp" />
@@ -72,7 +74,7 @@
                         android:id="@+id/password_edit_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:drawableLeft="@drawable/ic_person_white_24dp"
+                        android:drawableLeft="@drawable/ic_lock_white_24dp"
                         android:drawablePadding="10dp"
                         android:drawableStart="@drawable/ic_lock_white_24dp"
                         android:hint="Password"
@@ -85,6 +87,7 @@
                 </android.support.design.widget.TextInputLayout>
 
                 <TextView
+                    android:id="@+id/forgot_password"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="right"

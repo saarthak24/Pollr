@@ -2,13 +2,16 @@ package com.akotnana.pollr.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +35,8 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
+import jp.wasabeef.blurry.Blurry;
+
 import static android.view.View.GONE;
 
 public class SignUpActivity extends AppCompatActivity {
@@ -39,6 +44,8 @@ public class SignUpActivity extends AppCompatActivity {
     public String TAG = "SignUpActivity";
 
     private FirebaseAuth mAuth;
+
+    ImageView backgroundView;
 
     EditText username;
     EditText password;
@@ -57,6 +64,10 @@ public class SignUpActivity extends AppCompatActivity {
         password = (EditText) findViewById(R.id.password_edit_text);
         email = (EditText) findViewById(R.id.email_edit_text);
         signUp = (Button) findViewById(R.id.register_button);
+
+
+        backgroundView = (ImageView) findViewById(R.id.hello_world);
+        //Blurry.with(getApplicationContext()).radius(25).sampling(2).from(((BitmapDrawable) getResources().getDrawable(R.drawable.background1)).getBitmap()).into(backgroundView);
 
         final String token = FirebaseInstanceId.getInstance().getToken();
         String realToken = "";
@@ -93,6 +104,8 @@ public class SignUpActivity extends AppCompatActivity {
                                             .setDisplayName(username.getText().toString())
                                             .build();
                                     user.updateProfile(profileUpdates);
+                                    String idToken = new DataStorage(getApplicationContext()).getAuthToken();
+                                    //TODO: sned rahul joints
                                     updateUI(user);
                                 } else {
                                     // If sign in fails, display a message to the user.
@@ -110,12 +123,15 @@ public class SignUpActivity extends AppCompatActivity {
 
         signIn = (LinearLayout) findViewById(R.id.sign_in_link);
 
-        signIn.setOnClickListener(new View.OnClickListener() {
+        signIn.setOnTouchListener(new View.OnTouchListener() {
+
             @Override
-            public void onClick(View view) {
+            public boolean onTouch(View view, MotionEvent motionEvent) {
                 Intent intent = new Intent(getApplicationContext(),SignInActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
+                finish();
+                return false;
             }
         });
     }
@@ -126,6 +142,7 @@ public class SignUpActivity extends AppCompatActivity {
             Intent intent = new Intent(getApplicationContext(), ProfileEditActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
+            finish();
         }
     }
 

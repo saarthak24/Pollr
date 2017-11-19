@@ -5,11 +5,12 @@
     android:orientation="vertical">
 
     <ImageView
+        android:id="@+id/hello_world"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="top"
         android:scaleType="centerCrop"
-        android:src="@drawable/background1"
+        android:src="@drawable/background4"
         android:tint="@color/colorPrimary"
         android:tintMode="multiply" />
 
@@ -24,6 +25,7 @@
             android:layout_height="0dp"
             android:layout_gravity="center"
             android:layout_weight="5"
+            android:padding="20dp"
             android:layout_marginTop="15dp"
             android:layout_marginBottom="15dp"
             android:scaleType="fitCenter"
@@ -75,7 +77,7 @@
                         android:drawableStart="@drawable/ic_email_white_24dp"
                         android:hint="Email"
                         android:imeOptions="actionNext"
-                        android:inputType="text"
+                        android:inputType="textEmailAddress"
                         android:textColor="@color/white"
                         android:textColorHint="@color/white"
                         android:textSize="16sp" />

@@ -8,7 +8,8 @@
     android:orientation="vertical"
     android:gravity="center|bottom">
 
-    <ImageView
+    <!--
+    <com.akotnana.pollr.utils.RoundRectCornerImageView
         android:id="@+id/materialup.profile_image"
         android:layout_width="96dp"
         android:layout_height="96dp"
@@ -16,6 +17,18 @@
         android:src="@drawable/logo1"
         app:layout_scrollFlags="scroll"
         />
+    -->
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/materialup.profile_image"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/male"
+        app:civ_border_width="2dp"
+        app:civ_border_color="#FFF"
+        app:layout_scrollFlags="scroll"
+        />
+
 
     <TextView
         android:padding="10dp"

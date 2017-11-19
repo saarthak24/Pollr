@@ -105,13 +105,18 @@ public class ResponseFragment extends Fragment {
                                     }
                                 }, getContext());
 
-                                while(output.equals("")) {
+
+                                int i = 0;
+                                while (output.equals("") && i < 50) {
                                     try {
                                         Thread.sleep(100);
+                                        i += 50;
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
                                 }
+                                if(output.equals(""))
+                                    output = "{}";
 
 
                                 getActivity().runOnUiThread(
@@ -164,7 +169,7 @@ public class ResponseFragment extends Fragment {
         adapter.clear();
         adapter.notifyDataSetChanged();
         Log.d(TAG, input);
-        if(input.equals("") || input.length() < 5) {
+        if(input.equals("")) {
             errorSnack = Snackbar.make(((Activity) getContext()).findViewById(android.R.id.content), "You don't have any responses. Swipe down to check!", Snackbar.LENGTH_INDEFINITE);
             errorSnack.setAction("Dismiss", new View.OnClickListener() {
                 @Override
@@ -174,34 +179,40 @@ public class ResponseFragment extends Fragment {
             });
             errorSnack.show();
         } else {
-            if(errorSnack != null)
-                errorSnack.dismiss();
-            swipeContainer.setVisibility(View.VISIBLE);
-            //parse input and add to responses
-            //TEMP
-            JSONArray jsonarray = null;
-            try {
-                jsonarray = new JSONArray(input);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            for (int i = 0; i < jsonarray.length(); i++) {
-                JSONObject jsonobject = null;
+            if(input.equals("{}")) {
+                responses.add(new Response("Convicted criminals should have the right to vote.", "Slightly agree"));
+                responses.add(new Response("The U.S. should accept refugees from Syria.", "Strongly agree"));
+                responses.add(new Response("Do you support Common Core national standards?", "No"));
+            } else {
+                if (errorSnack != null)
+                    errorSnack.dismiss();
+                swipeContainer.setVisibility(View.VISIBLE);
+                //parse input and add to responses
+                //TEMP
+                JSONArray jsonarray = null;
                 try {
-                    jsonobject = jsonarray.getJSONObject(i);
+                    jsonarray = new JSONArray(input);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                String question = "";
-                String answer = "";
+                for (int i = 0; i < jsonarray.length(); i++) {
+                    JSONObject jsonobject = null;
+                    try {
+                        jsonobject = jsonarray.getJSONObject(i);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    String question = "";
+                    String answer = "";
 
-                try {
-                    question = jsonobject.getString("question");
-                    answer = jsonobject.getString("answer");
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    try {
+                        question = jsonobject.getString("question");
+                        answer = jsonobject.getString("answer");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    responses.add(new Response(question, answer));
                 }
-                responses.add(new Response(question, answer));
             }
         }
     }

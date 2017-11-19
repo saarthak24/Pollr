@@ -4,9 +4,16 @@ package com.akotnana.pollr.activities;
  * Created by anees on 11/12/2017.
  */
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -18,6 +25,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +33,23 @@ import com.akotnana.pollr.R;
 import com.akotnana.pollr.fragments.DashboardFragment;
 import com.akotnana.pollr.fragments.ProfileFragment;
 import com.akotnana.pollr.fragments.ResponseFragment;
+import com.akotnana.pollr.utils.DataStorage;
+import com.akotnana.pollr.utils.RoundRectCornerImageView;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import de.hdodenhof.circleimageview.CircleImageView;
+
+import static com.akotnana.pollr.utils.DataStorage.decodeSampledBitmapFromFile;
 
 public class NavigationActivity extends AppCompatActivity implements ResponseFragment.OnFragmentInteractionListener, DashboardFragment.OnFragmentInteractionListener, ProfileFragment.OnFragmentInteractionListener {
 
@@ -87,6 +112,60 @@ public class NavigationActivity extends AppCompatActivity implements ResponseFra
                         return true;
                     }
                 });
+
+        View hView = navigationView.getHeaderView(0);
+        final CircleImageView imageView = (CircleImageView) hView.findViewById(R.id.materialup_profile_image);
+
+        File path = new File(getApplicationContext().getFilesDir(), "pollr_images/");
+        if (!path.exists()) path.mkdirs();
+        final File imageFile = new File(path, "image.jpg");
+        // use imageFile to open your image
+        Log.d("ProfileEditActivity", "" + imageFile.exists());
+        if (imageFile.exists()) {
+            Bitmap bitmap = decodeSampledBitmapFromFile(imageFile.getAbsolutePath(), 1000, 700);
+            Drawable d = new BitmapDrawable(getResources(), bitmap);
+            imageView.setImageDrawable(d);
+        } else if (!new DataStorage(getApplicationContext()).getData("imageURI").equals("")) {
+            Uri imageURI1 = Uri.parse(new DataStorage(getApplicationContext()).getData("imageURI"));
+            //imageView.setImageURI(null);
+            imageView.setImageURI(imageURI1);
+        } else {
+            //imageView.setImageURI(null);
+            FirebaseStorage storage = FirebaseStorage.getInstance();
+            StorageReference storageReference = storage.getReferenceFromUrl("gs://pollr-89a97.appspot.com").child(FirebaseAuth.getInstance().getCurrentUser().getUid() + ".jpg");
+            final long ONE_MEGABYTE = 1024 * 1024;
+            storageReference.getBytes(3*ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                @Override
+                public void onSuccess(byte[] bytes) {
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    File path = new File(getApplicationContext().getFilesDir(), "pollr_images/");
+                    if (!path.exists()) path.mkdirs();
+                    File image = new File(path, "image.jpg");
+                    OutputStream fOut = null;
+                    try {
+                        fOut = new FileOutputStream(image);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut); // saving the Bitmap to a file compressed as a JPEG with 85% compression rate
+                    try {
+                        fOut.flush(); // Not really required
+                        fOut.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    // do not forget to close the stream
+
+                    try {
+                        MediaStore.Images.Media.insertImage(getApplicationContext().getContentResolver(),image.getAbsolutePath(),image.getName(),image.getName());
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    imageView.setImageBitmap(bitmap);
+                }
+            });
+        }
+
     }
 
     public void selectDrawerItem(MenuItem menuItem) {
@@ -96,14 +175,17 @@ public class NavigationActivity extends AppCompatActivity implements ResponseFra
         Class fragmentClass = null;
         switch(menuItem.getItemId()) {
             case R.id.dashboard_fragment:
+                mDrawer.closeDrawers();
                 fragmentClass = DashboardFragment.class;
                 Log.d("Navigation", "regular");
                 break;
             case R.id.responses_fragment:
+                mDrawer.closeDrawers();
                 fragmentClass = ResponseFragment.class;
                 Log.d("Navigation", "clear");
                 break;
             case R.id.profile_fragment:
+                mDrawer.closeDrawers();
                 fragmentClass = ProfileFragment.class;
                 Log.d("Navigation", "clear");
                 break;
@@ -112,6 +194,7 @@ public class NavigationActivity extends AppCompatActivity implements ResponseFra
                 mDrawer.closeDrawers();
                 Toast.makeText(this, "Logging off...",
                         Toast.LENGTH_LONG).show();
+                FirebaseAuth.getInstance().signOut();
                 Intent intent = new Intent(getApplicationContext(), SignInActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
@@ -137,7 +220,6 @@ public class NavigationActivity extends AppCompatActivity implements ResponseFra
             // Set action bar title
             toolbarTitle.setText(menuItem.getTitle());
 
-            mDrawer.closeDrawers();
         } else {
 
             try {
@@ -176,6 +258,7 @@ public class NavigationActivity extends AppCompatActivity implements ResponseFra
         return super.onOptionsItemSelected(item);
     }
 
+
     // `onPostCreate` called when activity start-up is complete after `onStart()`
     // NOTE! Make sure to override the method with only a single `Bundle` argument
     @Override
@@ -198,6 +281,72 @@ public class NavigationActivity extends AppCompatActivity implements ResponseFra
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to
+
+        for (Fragment fragment : getSupportFragmentManager().getFragments()) {
+            Log.d("requestCode", String.valueOf(requestCode));
+            fragment.onActivityResult(requestCode, resultCode, data);
+        }
+
+        if(requestCode == ProfileFragment.CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+
+
+        /*View headerView = navigationView.inflateHeaderView(R.layout.nav_header);
+        CircleImageView imageView = headerView.findViewById(R.id.materialup_profile_image);*/
+
+            View hView = nvDrawer.getHeaderView(0);
+            final CircleImageView imageView = (CircleImageView) hView.findViewById(R.id.materialup_profile_image);
+
+            File path = new File(getApplicationContext().getFilesDir(), "pollr_images/");
+            if (!path.exists()) path.mkdirs();
+            final File imageFile = new File(path, "image.jpg");
+            // use imageFile to open your image
+            Log.d("ProfileEditActivity", "" + imageFile.exists());
+            if (imageFile.exists()) {
+                Bitmap bitmap = decodeSampledBitmapFromFile(imageFile.getAbsolutePath(), 1000, 700);
+                Drawable d = new BitmapDrawable(getResources(), bitmap);
+                imageView.setImageDrawable(d);
+            } else if (!new DataStorage(getApplicationContext()).getData("imageURI").equals("")) {
+                Uri imageURI1 = Uri.parse(new DataStorage(getApplicationContext()).getData("imageURI"));
+                //imageView.setImageURI(null);
+                imageView.setImageURI(imageURI1);
+            } else {
+                //imageView.setImageURI(null);
+                FirebaseStorage storage = FirebaseStorage.getInstance();
+                StorageReference storageReference = storage.getReferenceFromUrl("gs://pollr-89a97.appspot.com").child(FirebaseAuth.getInstance().getCurrentUser().getUid() + ".jpg");
+                final long ONE_MEGABYTE = 1024 * 1024;
+                storageReference.getBytes(3*ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        File path = new File(getApplicationContext().getFilesDir(), "pollr_images/");
+                        if (!path.exists()) path.mkdirs();
+                        File image = new File(path, "image.jpg");
+                        OutputStream fOut = null;
+                        try {
+                            fOut = new FileOutputStream(image);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut); // saving the Bitmap to a file compressed as a JPEG with 85% compression rate
+                        try {
+                            fOut.flush(); // Not really required
+                            fOut.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        // do not forget to close the stream
+
+                        try {
+                            MediaStore.Images.Media.insertImage(getApplicationContext().getContentResolver(),image.getAbsolutePath(),image.getName(),image.getName());
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        imageView.setImageBitmap(bitmap);
+                    }
+                });
+            }
+        }
+
         if (requestCode == 0) {
             int toCheck = 0;
             CharSequence i = toolbarTitle.getText();
