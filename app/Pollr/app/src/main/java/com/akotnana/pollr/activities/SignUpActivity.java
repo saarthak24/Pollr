@@ -13,14 +13,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.akotnana.pollr.R;
-import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.DataStorage;
-import com.akotnana.pollr.utils.VolleyCallback;
-import com.android.volley.VolleyError;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -28,16 +24,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.iid.FirebaseInstanceId;
-
-import org.json.JSONObject;
-
-import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-
-import jp.wasabeef.blurry.Blurry;
-
-import static android.view.View.GONE;
 
 public class SignUpActivity extends AppCompatActivity {
 

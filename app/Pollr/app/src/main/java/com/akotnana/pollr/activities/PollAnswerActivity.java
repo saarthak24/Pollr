@@ -215,8 +215,7 @@ public class PollAnswerActivity extends AppCompatActivity {
                 Log.d(TAG, "MC startme");
                 final String finalId = id;
                 BackendUtils.doGetRequest("/api/v1/getpoll", new HashMap<String, String>() {{
-                    Log.d(TAG, new DataStorage(getApplicationContext()).getData("auth_token"));
-                    put("auth_token", new DataStorage(getApplicationContext()).getData("auth_token"));
+                    put("auth_token", new DataStorage(getApplicationContext()).getAuthToken());
                     put("poll_id", finalId);
                 }}, new VolleyCallback() {
                     @Override
@@ -280,7 +279,7 @@ public class PollAnswerActivity extends AppCompatActivity {
                     answer = radioButton.getText().toString();
                 }
                 BackendUtils.doPostRequest("/api/v1/answer", new HashMap<String, String>() {{
-                    put("auth_token", new DataStorage(getApplicationContext()).getData("auth_token"));
+                    put("auth_token", new DataStorage(getApplicationContext()).getAuthToken());
                     put("poll_id", finalId1);
                     put("answer", answer);
                 }}, new VolleyCallback() {

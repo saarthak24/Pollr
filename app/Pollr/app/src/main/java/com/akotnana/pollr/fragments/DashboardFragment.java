@@ -127,7 +127,7 @@ public class DashboardFragment extends Fragment {
                                 Log.d(TAG, "Retrieving");
                                 String gg = "";
                                 BackendUtils.doGetRequest("/api/v1/dashboard", new HashMap<String, String>() {{
-                                    put("auth_token", new DataStorage(getContext()).getData("auth_token"));
+                                    put("auth_token", new DataStorage(getContext()).getAuthToken());
                                 }}, new VolleyCallback() {
                                     @Override
                                     public void onSuccess(String result) {
@@ -371,7 +371,7 @@ public class DashboardFragment extends Fragment {
                 chosenDate.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dobArray[0]));
                 final int age = getAge(chosenDate);
 
-                BackendUtils.doPostRequest("/api/v1/user_profile", new HashMap<String, String>() {{
+                BackendUtils.doPostRequest("/api/v1/verify", new HashMap<String, String>() {{
                     put("name", fullName);
                     put("auth_token", new DataStorage(getContext()).getAuthToken());
                     put("age", String.valueOf(age));

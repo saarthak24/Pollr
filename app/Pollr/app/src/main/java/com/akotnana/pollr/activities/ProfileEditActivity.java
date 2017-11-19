@@ -217,7 +217,7 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
                 BackendUtils.doPostRequest("/api/v1/user_profile", new HashMap<String, String>() {{
                     put("name", name.getText().toString());
                     put("race", race.getText().toString());
-                    put("auth_token", new DataStorage(getApplicationContext()).getData("auth_token"));
+                    put("auth_token", new DataStorage(getApplicationContext()).getAuthToken());
                     put("district", zip_code.getText().toString());
                     put("age", String.valueOf(age) + "*" + dob.getText().toString());
                     put("income", income.getText().toString());

@@ -91,7 +91,7 @@ public class ResponseFragment extends Fragment {
                                 Log.d(TAG, "Retrieving");
                                 String gg = "";
                                 BackendUtils.doGetRequest("/api/v1/responses", new HashMap<String, String>() {{
-                                    put("auth_token", new DataStorage(getContext()).getData("auth_token"));
+                                    put("auth_token", new DataStorage(getContext()).getAuthToken());
                                 }}, new VolleyCallback() {
                                     @Override
                                     public void onSuccess(String result) {

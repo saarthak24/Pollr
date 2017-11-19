@@ -222,7 +222,7 @@ public class ProfileFragment extends Fragment implements DatePickerDialog.OnDate
                 BackendUtils.doPostRequest("/api/v1/user_profile", new HashMap<String, String>() {{
                     put("name", name.getText().toString());
                     put("race", race.getText().toString());
-                    put("auth_token", new DataStorage(getContext()).getData("auth_token"));
+                    put("auth_token", new DataStorage(getContext()).getAuthToken());
                     put("district", zip_code.getText().toString());
                     put("age", String.valueOf(age) + "*" + dob.getText().toString());
                     put("income", income.getText().toString());
@@ -708,7 +708,7 @@ public class ProfileFragment extends Fragment implements DatePickerDialog.OnDate
 
     public void instantiateEverything() {
         BackendUtils.doPostRequest("/api/v1/user_profile_get", new HashMap<String, String>() {{
-            put("auth_token", new DataStorage(getContext()).getData("auth_token"));
+            put("auth_token", new DataStorage(getContext()).getAuthToken());
         }}, new VolleyCallback() {
             @Override
             public void onSuccess(String result) {
