@@ -1,3 +1,5 @@
+release/
+*.pyc
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
