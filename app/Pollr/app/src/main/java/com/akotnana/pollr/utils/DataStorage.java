@@ -6,8 +6,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -32,34 +34,30 @@ public class DataStorage {
 
     public void storeData(String key, String value) {
         SharedPreferences.Editor editor = context.getSharedPreferences("PREFS", Context.MODE_PRIVATE).edit();
-        editor.putString(key,value);
+        editor.putString(key, value);
         editor.apply();
     }
-
+    /*
     public String getAuthToken() {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if(currentUser == null) {
+        if (currentUser == null) {
             return "";
         }
-        currentUser.getToken(true)
-                .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
-                    public void onComplete(@NonNull Task<GetTokenResult> task) {
-                        if (task.isSuccessful()) {
-                            idToken = task.getResult().getToken();
-                        } else {
-                            FirebaseCrash.report(task.getException());
-                        }
-                    }
-                });
+        currentUser.getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
+            @Override
+            public void onSuccess(GetTokenResult result) {
+                Log.d("DataStorage", result.getToken());
+                idToken = result.getToken();
+            }
+        });
         return idToken;
-    }
+    }*/
 
     public String getData(String key) {
         return context.getSharedPreferences("PREFS", Context.MODE_PRIVATE).getString(key, "");
     }
 
-    public static Bitmap decodeSampledBitmapFromFile(String path, int reqWidth, int reqHeight)
-    { // BEST QUALITY MATCH
+    public static Bitmap decodeSampledBitmapFromFile(String path, int reqWidth, int reqHeight) { // BEST QUALITY MATCH
 
         //First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -72,16 +70,14 @@ public class DataStorage {
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         int inSampleSize = 1;
 
-        if (height > reqHeight)
-        {
-            inSampleSize = Math.round((float)height / (float)reqHeight);
+        if (height > reqHeight) {
+            inSampleSize = Math.round((float) height / (float) reqHeight);
         }
         int expectedWidth = width / inSampleSize;
 
-        if (expectedWidth > reqWidth)
-        {
+        if (expectedWidth > reqWidth) {
             //if(Math.round((float)width / (float)reqWidth) > inSampleSize) // If bigger SampSize..
-            inSampleSize = Math.round((float)width / (float)reqWidth);
+            inSampleSize = Math.round((float) width / (float) reqWidth);
         }
 
         options.inSampleSize = inSampleSize;

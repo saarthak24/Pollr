@@ -4,8 +4,10 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.view.ContextThemeWrapper;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,14 +18,21 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.akotnana.pollr.R;
+import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.DataStorage;
+import com.akotnana.pollr.utils.VolleyCallback;
+import com.android.volley.VolleyError;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.iid.FirebaseInstanceId;
+
+import java.util.HashMap;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -90,12 +99,34 @@ public class SignUpActivity extends AppCompatActivity {
                                             .setDisplayName(username.getText().toString())
                                             .build();
                                     user.updateProfile(profileUpdates);
-                                    String idToken = new DataStorage(getApplicationContext()).getAuthToken();
-                                    //TODO: sned rahul joints
+                                    FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
+                                        @Override
+                                        public void onSuccess(GetTokenResult result) {
+                                            Log.d("DataStorage", result.getToken());
+                                            final String idToken = result.getToken();
+                                            BackendUtils.doPostRequest("/api/v1/register", new HashMap<String, String>() {{
+                                                put("auth_token", idToken);
+                                            }}, new VolleyCallback() {
+                                                @Override
+                                                public void onSuccess(String result) {
+                                                    Log.d(TAG, result);
+                                                    progressDialog.dismiss();
+                                                }
+
+                                                @Override
+                                                public void onError(VolleyError error) {
+                                                    progressDialog.dismiss();
+                                                }
+                                            }, getApplicationContext());
+                                        }
+                                    });
+                                    signUp.setEnabled(true);
                                     updateUI(user);
                                 } else {
                                     // If sign in fails, display a message to the user.
                                     Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                                    progressDialog.dismiss();
+                                    signUp.setEnabled(true);
                                     Toast.makeText(SignUpActivity.this, "Authentication failed.",
                                             Toast.LENGTH_SHORT).show();
                                     updateUI(null);
@@ -175,5 +206,7 @@ public class SignUpActivity extends AppCompatActivity {
         startActivity(intent);
         overridePendingTransition(0,0);
     }
+
+
 
 }

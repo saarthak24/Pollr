@@ -21,12 +21,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.akotnana.pollr.R;
+import com.akotnana.pollr.utils.BackendUtils;
 import com.akotnana.pollr.utils.DataStorage;
+import com.akotnana.pollr.utils.VolleyCallback;
+import com.android.volley.VolleyError;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
+
+import java.util.HashMap;
 
 public class SignInActivity extends AppCompatActivity {
 
@@ -124,12 +131,32 @@ public class SignInActivity extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     // Sign in success, update UI with the signed-in user's information
                                     Log.d(TAG, "signInWithEmail:success");
-                                    String idToken = new DataStorage(getApplicationContext()).getAuthToken();
-                                    //TODO: sned rahul jaunts
-                                    progressDialog.dismiss();
+                                    FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
+                                        @Override
+                                        public void onSuccess(GetTokenResult result) {
+                                            Log.d("DataStorage", result.getToken());
+                                            final String idToken = result.getToken();
+                                            BackendUtils.doPostRequest("/api/v1/login", new HashMap<String, String>() {{
+                                                put("auth_token", idToken);
+                                            }}, new VolleyCallback() {
+                                                @Override
+                                                public void onSuccess(String result) {
+                                                    Log.d(TAG, result);
+                                                    progressDialog.dismiss();
+                                                }
+
+                                                @Override
+                                                public void onError(VolleyError error) {
+                                                    progressDialog.dismiss();
+                                                }
+                                            }, getApplicationContext());
+                                        }
+                                    });
+                                    signIn.setEnabled(true);
                                     updateUI(mAuth.getCurrentUser());
                                 } else {
                                     progressDialog.dismiss();
+                                    signIn.setEnabled(true);
                                     // If sign in fails, display a message to the user.
                                     Log.w(TAG, "signInWithEmail:failure", task.getException());
                                     Toast.makeText(SignInActivity.this, "Authentication failed.",
@@ -163,8 +190,27 @@ public class SignInActivity extends AppCompatActivity {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        String idToken = new DataStorage(getApplicationContext()).getAuthToken();
-        //TODO: sned rahul jaunts
+        if(currentUser != null) {
+            FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
+                @Override
+                public void onSuccess(GetTokenResult result) {
+                    Log.d("DataStorage", result.getToken());
+                    final String idToken = result.getToken();
+                    BackendUtils.doPostRequest("/api/v1/login", new HashMap<String, String>() {{
+                        put("auth_token", idToken);
+                    }}, new VolleyCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, result);
+                        }
+
+                        @Override
+                        public void onError(VolleyError error) {
+                        }
+                    }, getApplicationContext());
+                }
+            });
+        }
         updateUI(currentUser);
     }
 

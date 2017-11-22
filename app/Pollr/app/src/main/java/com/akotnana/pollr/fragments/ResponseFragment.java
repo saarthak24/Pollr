@@ -22,6 +22,9 @@ import com.akotnana.pollr.utils.Response;
 import com.akotnana.pollr.utils.RVAdapterResponse;
 import com.akotnana.pollr.utils.VolleyCallback;
 import com.android.volley.VolleyError;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.GetTokenResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -90,27 +93,36 @@ public class ResponseFragment extends Fragment {
 
                                 Log.d(TAG, "Retrieving");
                                 String gg = "";
-                                BackendUtils.doGetRequest("/api/v1/responses", new HashMap<String, String>() {{
-                                    put("auth_token", new DataStorage(getContext()).getAuthToken());
-                                }}, new VolleyCallback() {
+                                FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
                                     @Override
-                                    public void onSuccess(String result) {
-                                        //Log.d(TAG, result);
-                                        output = result;
-                                    }
+                                    public void onSuccess(GetTokenResult result) {
+                                        Log.d("DataStorage", result.getToken());
+                                        final String idToken = result.getToken();
+                                        BackendUtils.doGetRequest("/api/v1/responses", new HashMap<String, String>() {{
+                                            put("auth_token", idToken);
+                                        }}, new VolleyCallback() {
+                                            @Override
+                                            public void onSuccess(String result) {
+                                                //Log.d(TAG, result);
+                                                output = result;
+                                            }
 
-                                    @Override
-                                    public void onError(VolleyError error) {
+                                            @Override
+                                            public void onError(VolleyError error) {
 
+                                            }
+                                        }, getContext());
                                     }
-                                }, getContext());
+                                });
+
+
 
 
                                 int i = 0;
                                 while (output.equals("") && i < 100) {
                                     try {
                                         Thread.sleep(100);
-                                        i += 50;
+                                        i += 1;
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
@@ -169,7 +181,7 @@ public class ResponseFragment extends Fragment {
         adapter.clear();
         adapter.notifyDataSetChanged();
         Log.d(TAG, input);
-        if(input.equals("")) {
+        if(input.equals("") || input.length() < 5) {
             errorSnack = Snackbar.make(((Activity) getContext()).findViewById(android.R.id.content), "You don't have any responses. Swipe down to check!", Snackbar.LENGTH_INDEFINITE);
             errorSnack.setAction("Dismiss", new View.OnClickListener() {
                 @Override

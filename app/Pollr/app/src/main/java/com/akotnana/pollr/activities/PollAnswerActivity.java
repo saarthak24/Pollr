@@ -37,6 +37,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.etiennelawlor.discreteslider.library.ui.DiscreteSlider;
 import com.etiennelawlor.discreteslider.library.utilities.DisplayUtility;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.GetTokenResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -230,53 +233,60 @@ public class PollAnswerActivity extends AppCompatActivity {
             } else {
                 Log.d(TAG, "MC startme");
                 final String finalId = id;
-                BackendUtils.doGetRequest("/api/v1/getpoll", new HashMap<String, String>() {{
-                    put("auth_token", new DataStorage(getApplicationContext()).getAuthToken());
-                    put("poll_id", finalId);
-                }}, new VolleyCallback() {
+                FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
                     @Override
-                    public void onSuccess(String result) {
-                        Log.d(TAG, result);
-                        JSONObject object = null;
-                        String hello = null;
-                        try {
-                            object = new JSONObject(result);
-                            hello = object.getString("choices");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        String[] arr = hello.substring(1, hello.length() - 1).split(", ");
+                    public void onSuccess(GetTokenResult result) {
+                        Log.d("DataStorage", result.getToken());
+                        final String idToken = result.getToken();
+                        BackendUtils.doGetRequest("/api/v1/getpoll", new HashMap<String, String>() {{
+                            put("auth_token", idToken);
+                            put("poll_id", finalId);
+                        }}, new VolleyCallback() {
+                            @Override
+                            public void onSuccess(String result) {
+                                Log.d(TAG, result);
+                                JSONObject object = null;
+                                String hello = null;
+                                try {
+                                    object = new JSONObject(result);
+                                    hello = object.getString("choices");
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                String[] arr = hello.substring(1, hello.length() - 1).split(", ");
 
-                        for (int i = 0; i < arr.length; i++) {
-                            RadioButton butt = new RadioButton(getApplicationContext());
-                            butt.setText(arr[i]);
-                            butt.setTextSize(18f);
-                            butt.setPadding(0, 30, 0, 30);
-                            ColorStateList colorStateList = new ColorStateList(
-                                    new int[][]{
-                                            new int[]{-android.R.attr.state_checked},
-                                            new int[]{android.R.attr.state_checked}
-                                    },
-                                    new int[]{
+                                for (int i = 0; i < arr.length; i++) {
+                                    RadioButton butt = new RadioButton(getApplicationContext());
+                                    butt.setText(arr[i]);
+                                    butt.setTextSize(18f);
+                                    butt.setPadding(0, 30, 0, 30);
+                                    ColorStateList colorStateList = new ColorStateList(
+                                            new int[][]{
+                                                    new int[]{-android.R.attr.state_checked},
+                                                    new int[]{android.R.attr.state_checked}
+                                            },
+                                            new int[]{
 
-                                            Color.DKGRAY
-                                            , getResources().getColor(R.color.colorPrimary),
-                                    }
-                            );
-                            butt.setButtonTintList(colorStateList);
-                            if (!arr[i].isEmpty())
-                                radioGroup.addView(butt);
-                        }
-                        bore.setVisibility(GONE);
-                        slider.setVisibility(GONE);
-                        multipleChoice.setVisibility(View.VISIBLE);
+                                                    Color.DKGRAY
+                                                    , getResources().getColor(R.color.colorPrimary),
+                                            }
+                                    );
+                                    butt.setButtonTintList(colorStateList);
+                                    if (!arr[i].isEmpty())
+                                        radioGroup.addView(butt);
+                                }
+                                bore.setVisibility(GONE);
+                                slider.setVisibility(GONE);
+                                multipleChoice.setVisibility(View.VISIBLE);
+                            }
+
+                            @Override
+                            public void onError(VolleyError error) {
+
+                            }
+                        }, getApplicationContext());
                     }
-
-                    @Override
-                    public void onError(VolleyError error) {
-
-                    }
-                }, getApplicationContext());
+                });
             }
 
         }
@@ -295,32 +305,40 @@ public class PollAnswerActivity extends AppCompatActivity {
                         RadioButton radioButton = (RadioButton) findViewById(selectedId);
                         answer = radioButton.getText().toString();
                     }
-                    BackendUtils.doPostRequest("/api/v1/answer", new HashMap<String, String>() {{
-                        put("auth_token", new DataStorage(getApplicationContext()).getAuthToken());
-                        put("poll_id", finalId1);
-                        put("answer", answer);
-                    }}, new VolleyCallback() {
+                    FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
                         @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, result);
-                            Toast.makeText(getApplicationContext(), "Response submitted!", Toast.LENGTH_LONG).show();
-                            new DataStorage(getApplicationContext()).storeData("lastPollAnswered", finalId1);
-                            if (finalFromNotification.equals(0))
-                                finish();
-                            else {
-                                Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                                startActivity(intent);
-                                overridePendingTransition(0, 0);
-                                finish();
-                            }
-                        }
+                        public void onSuccess(GetTokenResult result) {
+                            Log.d("DataStorage", result.getToken());
+                            final String idToken = result.getToken();
+                            BackendUtils.doPostRequest("/api/v1/answer", new HashMap<String, String>() {{
+                                put("auth_token", idToken);
+                                put("poll_id", finalId1);
+                                put("answer", answer);
+                            }}, new VolleyCallback() {
+                                @Override
+                                public void onSuccess(String result) {
+                                    Log.d(TAG, result);
+                                    Toast.makeText(getApplicationContext(), "Response submitted!", Toast.LENGTH_LONG).show();
+                                    new DataStorage(getApplicationContext()).storeData("lastPollAnswered", finalId1);
+                                    if (finalFromNotification.equals(0))
+                                        finish();
+                                    else {
+                                        Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                                        startActivity(intent);
+                                        overridePendingTransition(0, 0);
+                                        finish();
+                                    }
+                                }
 
-                        @Override
-                        public void onError(VolleyError error) {
-                            submitButton.setEnabled(true);
+                                @Override
+                                public void onError(VolleyError error) {
+                                    submitButton.setEnabled(true);
+                                }
+                            }, getApplicationContext());
                         }
-                    }, getApplicationContext());
+                    });
+
                 } else {
                     Toast.makeText(getApplicationContext(), "Verification needed!", Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(getApplicationContext(), NavigationActivity.class);

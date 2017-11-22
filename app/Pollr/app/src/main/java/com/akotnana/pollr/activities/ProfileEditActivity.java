@@ -47,6 +47,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.storage.FirebaseStorage;
@@ -214,49 +215,56 @@ public class ProfileEditActivity extends AppCompatActivity implements DatePicker
                 progressDialog.setMessage("Joining...");
                 progressDialog.show();
                 //new DataStorage(getApplicationContext()).storeData("dob", dob.getText().toString());
-                BackendUtils.doPostRequest("/api/v1/user_profile", new HashMap<String, String>() {{
-                    put("name", name.getText().toString());
-                    put("race", race.getText().toString());
-                    put("auth_token", new DataStorage(getApplicationContext()).getAuthToken());
-                    put("district", zip_code.getText().toString());
-                    put("age", String.valueOf(age) + "*" + dob.getText().toString());
-                    put("income", income.getText().toString());
-                    put("gender", gender.getText().toString());
-                }}, new VolleyCallback() {
+                FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
                     @Override
-                    public void onSuccess(String result) {
-                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                        //new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
-                        if(imageUri == null) {
-                            if(gender.getText().toString().equals("Male"))
-                                imageUri = Uri.parse("android.resource://your.package.name/" + R.drawable.male);
-                            else
-                                imageUri = Uri.parse("android.resource://your.package.name/" + R.drawable.female);
-                        }
+                    public void onSuccess(GetTokenResult result) {
+                        Log.d("DataStorage", result.getToken());
+                        final String idToken = result.getToken();
+                        BackendUtils.doPostRequest("/api/v1/user_profile", new HashMap<String, String>() {{
+                            put("name", name.getText().toString());
+                            put("race", race.getText().toString());
+                            put("auth_token", idToken);
+                            put("district", zip_code.getText().toString());
+                            put("age", String.valueOf(age) + "*" + dob.getText().toString());
+                            put("income", income.getText().toString());
+                            put("gender", gender.getText().toString());
+                        }}, new VolleyCallback() {
+                            @Override
+                            public void onSuccess(String result) {
+                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                //new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
+                                if(imageUri == null) {
+                                    if(gender.getText().toString().equals("Male"))
+                                        imageUri = Uri.parse("android.resource://your.package.name/" + R.drawable.male);
+                                    else
+                                        imageUri = Uri.parse("android.resource://your.package.name/" + R.drawable.female);
+                                }
 
-                        new DataStorage(getApplicationContext()).storeData("imageURI", imageUri.toString());
+                                new DataStorage(getApplicationContext()).storeData("imageURI", imageUri.toString());
 
-                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                .setPhotoUri(imageUri)
-                                .build();
-                        user.updateProfile(profileUpdates)
-                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        if (task.isSuccessful()) {
-                                            Log.d(TAG, "User profile updated.");
-                                        }
-                                    }
-                                });
-                        onSignUpSuccess();
-                        progressDialog.dismiss();
+                                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                        .setPhotoUri(imageUri)
+                                        .build();
+                                user.updateProfile(profileUpdates)
+                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+                                                    Log.d(TAG, "User profile updated.");
+                                                }
+                                            }
+                                        });
+                                onSignUpSuccess();
+                                progressDialog.dismiss();
+                            }
+
+                            @Override
+                            public void onError(VolleyError error) {
+
+                            }
+                        }, getApplicationContext());
                     }
-
-                    @Override
-                    public void onError(VolleyError error) {
-
-                    }
-                }, getApplicationContext());
+                });
             }
         });
 

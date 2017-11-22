@@ -48,6 +48,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -219,27 +220,35 @@ public class ProfileFragment extends Fragment implements DatePickerDialog.OnDate
                 progressDialog.setIndeterminate(true);
                 progressDialog.setMessage("Joining...");
                 progressDialog.show();
-                BackendUtils.doPostRequest("/api/v1/user_profile", new HashMap<String, String>() {{
-                    put("name", name.getText().toString());
-                    put("race", race.getText().toString());
-                    put("auth_token", new DataStorage(getContext()).getAuthToken());
-                    put("district", zip_code.getText().toString());
-                    put("age", String.valueOf(age) + "*" + dob.getText().toString());
-                    put("income", income.getText().toString());
-                    put("gender", gender.getText().toString());
-                }}, new VolleyCallback() {
+                FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
                     @Override
-                    public void onSuccess(String result) {
-                        //new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
-                        onSignUpSuccess();
-                        progressDialog.dismiss();
-                    }
+                    public void onSuccess(GetTokenResult result) {
+                        Log.d("DataStorage", result.getToken());
+                        final String idToken = result.getToken();
+                        BackendUtils.doPostRequest("/api/v1/user_profile", new HashMap<String, String>() {{
+                            put("name", name.getText().toString());
+                            put("race", race.getText().toString());
+                            put("auth_token", idToken);
+                            put("district", zip_code.getText().toString());
+                            put("age", String.valueOf(age));
+                            put("income", income.getText().toString());
+                            put("gender", gender.getText().toString());
+                        }}, new VolleyCallback() {
+                            @Override
+                            public void onSuccess(String result) {
+                                //new DataStorage(getApplicationContext()).storeData("auth_token", result.trim());
+                                onSignUpSuccess();
+                                progressDialog.dismiss();
+                            }
 
-                    @Override
-                    public void onError(VolleyError error) {
+                            @Override
+                            public void onError(VolleyError error) {
 
+                            }
+                        }, getContext());
                     }
-                }, getContext());
+                });
+
             }
         });
 
@@ -708,7 +717,7 @@ public class ProfileFragment extends Fragment implements DatePickerDialog.OnDate
 
     public void instantiateEverything() {
         BackendUtils.doPostRequest("/api/v1/user_profile_get", new HashMap<String, String>() {{
-            put("auth_token", new DataStorage(getContext()).getAuthToken());
+            put("auth_token", new DataStorage(getContext()).getData("auth_token"));
         }}, new VolleyCallback() {
             @Override
             public void onSuccess(String result) {
@@ -719,8 +728,11 @@ public class ProfileFragment extends Fragment implements DatePickerDialog.OnDate
                     object = new JSONObject(result);
                     name.setText(titleCase(object.getString("name")));
                     nameDisplay.setText(titleCase(object.getString("name")));
-                    age = Integer.parseInt(object.getString("age").split("\\*")[0]);
-                    dob.setText(object.getString("age").split("\\*")[1]);
+                    DateFormat dateFormat = new SimpleDateFormat("MM-dd-YYYY");
+                    Calendar cal = Calendar.getInstance();
+                    age = Integer.parseInt(object.getString("age"));
+                    cal.add(Calendar.YEAR, -age);
+                    dob.setText(dateFormat.format(cal.getTime()));
                     gender.setText(object.getString("gender"));
                     zip_code.setText(object.getString("district"));
                     income.setText(object.getString("income"));
