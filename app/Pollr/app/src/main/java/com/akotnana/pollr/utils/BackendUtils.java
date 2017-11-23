@@ -33,6 +33,7 @@ public class BackendUtils {
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             request += entry.getKey() + "=" + entry.getValue() + "&";
         }
+        request = request.substring(0, request.length()-1);
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, request,
                 new Response.Listener<String>() {

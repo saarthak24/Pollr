@@ -523,7 +523,9 @@ public class CustomVerificationFlowActivity extends AppCompatActivity implements
     }
 
     private MetadataSettings createMetadataSettings(MetadataSettings.ImageMetadataSettings imageMetadataSettings) {
+
         MetadataSettings metadataSettings = new MetadataSettings();
+        /*
         if (mImageListener != null) {
             // if not set, then enable all images
             if (imageMetadataSettings == null) {
@@ -542,11 +544,12 @@ public class CustomVerificationFlowActivity extends AppCompatActivity implements
         }
         metadataSettings.setOcrMetadataAllowed(true);
         metadataSettings.setDetectionMetadataAllowed(true);
+        */
         // obtaining of partial result metadata must be enabled to get notification and result
         // from the first part/side of the document when it is successfully scanned
         metadataSettings.setPartialResultMetadataAllowed(true);
         // enable obtaining of glare metadata (glare detection status)
-        metadataSettings.setGlareMetadataAllowed(true);
+        //metadataSettings.setGlareMetadataAllowed(true);
         return metadataSettings;
     }
 

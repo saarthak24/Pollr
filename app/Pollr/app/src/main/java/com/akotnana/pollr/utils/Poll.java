@@ -8,11 +8,13 @@ public class Poll {
     String question;
     String pollType;
     String pollID;
+    boolean verified;
 
-    public Poll(String question, String pollType, String id) {
+    public Poll(String question, String pollType, String id, boolean verified) {
         this.question = question;
         this.pollID = id;
         this.pollType = pollType;
+        this.verified = verified;
     }
 
 
@@ -29,6 +31,10 @@ public class Poll {
 
     public String getPollType() {
         return pollType;
+    }
+
+    public boolean canAnswer() {
+        return verified;
     }
 
     public String getPollID() {

@@ -26,17 +26,11 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.akotnana.pollr.R;
-import com.akotnana.pollr.activities.MainActivity;
 import com.akotnana.pollr.activities.PollAnswerActivity;
-import com.firebase.jobdispatcher.Constraint;
-import com.firebase.jobdispatcher.FirebaseJobDispatcher;
-import com.firebase.jobdispatcher.GooglePlayDriver;
-import com.firebase.jobdispatcher.Job;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.Arrays;
-import java.util.Map;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
