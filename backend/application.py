@@ -252,7 +252,8 @@ def user_profile():
             "district" : user_info["district"],
             "income" : user_info["income"].lower(),
             "race" : user_info["race"].lower(),
-            "name" : user_info["name"].lower()
+            "name" : user_info["name"].lower(),
+            "verified": "false"
         }})
         return "Success!"
 #
@@ -296,7 +297,8 @@ def dashboard():
         rese = []
         for i in ids:
             pl = db.polls.find_one({"_id": i})
-            rese.append({"question":pl["question"], "id": str(i), "type": pl["type"]})
+            if(pl is not None):
+                rese.append({"question":pl["question"], "id": str(i), "type": pl["type"]})
         resp["polls"] = rese
         resp["verified"] = verified
 
