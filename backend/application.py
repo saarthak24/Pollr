@@ -95,6 +95,9 @@ def verify():
         date = user_verify["dob"]
         b_date = datetime.strptime(date, '%m-%d-%Y')
         age = (datetime.today() - b_date).days/365
+        db.usrs.update({"username":username},{"$set":{
+            "age": age
+        }})
         if(age >= 18):
             db.politicians.update({"username" : str(auth.get_user(uid).display_name)},{"$set":{"verified" : "true"}})
             return "Success!"
@@ -246,7 +249,6 @@ def user_profile():
             return "Fail"
         db.usrs.update({"username":username},{"$set":{
             "gender" : user_info["gender"].lower(),
-            "age" : user_info["age"].lower(),
             "district" : user_info["district"],
             "income" : user_info["income"].lower(),
             "race" : user_info["race"].lower(),
@@ -287,14 +289,17 @@ def dashboard():
 
         if(user_match == None):
             return "Fail"
-        if(user_match["verified"] != "true"):
-            return "not-verified"
+        verified = user_match["verified"]
         ids = db.usrs.find_one({"session_id": sess_token})["polls"]
         print("dashboard", ids)
+        resp = {}
         rese = []
         for i in ids:
             pl = db.polls.find_one({"_id": i})
             rese.append({"question":pl["question"], "id": str(i), "type": pl["type"]})
+        resp["polls"] = rese
+        resp["verified"] = verified
+
     return jsonify(rese)
 
 @application.route('/api/v1/getpoll',methods=['GET'])
