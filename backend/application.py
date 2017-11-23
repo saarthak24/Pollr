@@ -10,7 +10,7 @@ import pymongo
 import hashlib
 import nltk
 # nltk.download("punkt")
-from socialmedia.twitter_term_analysis import TwitterClient, TwitterClientLoc
+#from socialmedia.twitter_term_analysis import TwitterClient, TwitterClientLoc
 
 application = Flask(__name__)
 client = MongoClient("ds257495.mlab.com",57495)
@@ -95,7 +95,7 @@ def verify():
         date = user_verify["dob"]
         b_date = datetime.strptime(date, '%m-%d-%Y')
         age = (datetime.today() - b_date).days/365
-        db.usrs.update({"username":username},{"$set":{
+        db.usrs.update({"username":str(auth.get_user(uid).display_name)},{"$set":{
             "age": age
         }})
         if(age >= 18):
@@ -289,7 +289,7 @@ def dashboard():
 
         if(user_match == None):
             return "Fail"
-        verified = user_match["verified"]
+	verified = user_match["verified"]
         ids = db.usrs.find_one({"session_id": sess_token})["polls"]
         print("dashboard", ids)
         resp = {}
