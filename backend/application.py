@@ -91,11 +91,14 @@ def verify():
         except ValueError:
             return "Fail"
         uid = decoded_token['uid']
+
         date = user_verify["dob"]
         b_date = datetime.strptime(date, '%m-%d-%Y')
         age = (datetime.today() - b_date).days/365
         if(age >= 18):
+            db.politicians.update({"username" : str(auth.get_user(uid).display_name)},{"$set":{"verified" : "true"}})
             return "Success!"
+        db.politicians.update({"username" : str(auth.get_user(uid).display_name)},{"$set":{"verified" : "false"}})
         return "Fail"
 
         # hash_f = hashlib.md5((str(user_register["firebase_id"]) + str(user_register["username"])  + "pollr").encode("utf-8"))
@@ -281,7 +284,10 @@ def dashboard():
             "username" : username
         })
 
+
         if(user_match == None):
+            return "Fail"
+        if(user_match["verified"] != "true"):
             return "Fail"
         ids = db.usrs.find_one({"session_id": sess_token})["polls"]
         print("dashboard", ids)
