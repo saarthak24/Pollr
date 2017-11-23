@@ -290,7 +290,10 @@ def dashboard():
 
         if(user_match == None):
             return "Fail"
-	verified = user_match["verified"]
+	try:
+		verified = user_match["verified"]
+	except KeyError:
+		verified = "false"
         ids = db.usrs.find_one({"session_id": sess_token})["polls"]
         print("dashboard", ids)
         resp = {}
