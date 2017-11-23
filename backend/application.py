@@ -288,7 +288,7 @@ def dashboard():
         if(user_match == None):
             return "Fail"
         if(user_match["verified"] != "true"):
-            return "Fail"
+            return "not-verified"
         ids = db.usrs.find_one({"session_id": sess_token})["polls"]
         print("dashboard", ids)
         rese = []
