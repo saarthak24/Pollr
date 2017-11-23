@@ -294,16 +294,16 @@ def dashboard():
 		verified = user_match["verified"]
 	except KeyError:
 		verified = "false"
-        ids = db.usrs.find_one({"session_id": sess_token})["polls"]
-        print("dashboard", ids)
-        resp = {}
-        rese = []
-        for i in ids:
-            pl = db.polls.find_one({"_id": i})
-            if(pl is not None):
-                rese.append({"question":pl["question"], "id": str(i), "type": pl["type"]})
-        resp["polls"] = rese
-        resp["verified"] = verified
+    ids = db.usrs.find_one({"session_id": auth_token})["polls"]
+    print("dashboard", ids)
+    resp = {}
+    rese = []
+    for i in ids:
+        pl = db.polls.find_one({"_id": i})
+        if(pl is not None):
+            rese.append({"question":pl["question"], "id": str(i), "type": pl["type"]})
+    resp["polls"] = rese
+    resp["verified"] = verified
 
     return jsonify(rese)
 
