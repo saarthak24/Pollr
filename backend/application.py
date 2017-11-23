@@ -1,11 +1,15 @@
 from flask import Flask, request, jsonify, json
 from pyfcm import FCMNotification
 from pymongo import MongoClient
+from datetime import datetime
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import auth
 from bson.objectid import ObjectId
 import pymongo
 import hashlib
 import nltk
-nltk.download("punkt")
+# nltk.download("punkt")
 from socialmedia.twitter_term_analysis import TwitterClient, TwitterClientLoc
 
 application = Flask(__name__)
@@ -16,9 +20,9 @@ db.authenticate("pollr-server","pollr")
 
 push_service = FCMNotification(api_key="AAAAShAnsbk:APA91bGm7bK9Jlc7pFu38oQ-9w1_q0qQEfiJwrIgg0NS1sV-F47Il8kn6cJWPwUHo4RlSJAGN0nWkCQDMUNOs2xGAGu53dP1x7Ha5YZachCfqB2osU0SK7NVpBI34A1GAVAv8wO9WFFL")
 
-pokedex = [{'number': 14, 'name': 'Kakuna'},
-           {'number': 16, 'name': 'Pidgey'},
-           {'number': 50, 'name': 'Diglett'}]
+cred = credentials.Certificate("cert.json")
+firebase_admin.initialize_app(cred)
+
 def main(term, geocode, num, count):
     json = {}
     json['word'] = term
@@ -75,39 +79,74 @@ def words(text):
                 continue
         final.append(word)
     return final
+@application.route('/api/v1/verify', methods=('GET', 'POST'))
+def verify():
+    if request.method == 'POST':
+        user_verify = request.form.to_dict()
+        print(user_verify)
+        auth_token = str(user_verify["auth_token"])
+        decoded_token = ""
+        try:
+            decoded_token = auth.verify_id_token(auth_token)
+        except ValueError:
+            return "Fail"
+        uid = decoded_token['uid']
+        date = user_verify["dob"]
+        b_date = datetime.strptime(date, '%m:%d:%Y')
+        age = (datetime.today() - b_date).days/365
+        if(age >= 18):
+            return "Success!"
+        return "Fail"
+
+        # hash_f = hashlib.md5((str(user_register["firebase_id"]) + str(user_register["username"])  + "pollr").encode("utf-8"))
+        MM-DD-YYYY
+
+    return "Success!"
+
 @application.route('/api/v1/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
         user_register = request.form.to_dict()
         print(user_register)
-        hash_f = hashlib.md5((str(user_register["firebase_id"]) + str(user_register["username"])  + "pollr").encode("utf-8"))
+        auth_token = str(user_register["auth_token"])
+        try:
+            decoded_token = auth.verify_id_token(auth_token)
+        except ValueError:
+            return "Fail"
+        uid = decoded_token['uid']
+        # hash_f = hashlib.md5((str(user_register["firebase_id"]) + str(user_register["username"])  + "pollr").encode("utf-8"))
+
         db.usrs.insert_one({
-            "username": user_register["username"],
-            "password": user_register["password"],
-            "firebase_id": user_register["firebase_id"],
-            "hash_f": hash_f.hexdigest(),
+            "username": str(auth.get_user(uid).display_name),
+            "session_id": auth_token,
             "polls":[]
         })
 
 
-    return hash_f.hexdigest()
+    return "Success!"
 @application.route('/api/v1/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         user_login = request.form.to_dict()
         print(user_login)
+        auth_token = str(user_login["auth_token"])
+        try:
+            decoded_token = auth.verify_id_token(auth_token)
+        except ValueError:
+            return "Fail"
+        uid = decoded_token['uid']
+        # username = auth
         user_match = db.usrs.find_one({
-            "username" : user_login["username"]
+            "username" : str(auth.get_user(uid).display_name)
         })
+
         if(user_match == None):
             return "Fail"
-
-        print(user_match["password"],user_login["password"])
-        if(user_match["password"] == user_login["password"]):
-            registration_id = user_match["firebase_id"]
-            return user_match["hash_f"]
-
-        return "Fail"
+        # print(user_match["password"],user_login["password"])
+        # if(user_match["auth_token"] == user_login["password"]):
+        #     registration_id = user_match["firebase_id"]
+        #     return user_match["hash_f"]
+        return "Success"
 @application.route('/api/v1/pregister', methods=('GET', 'POST'))
 def pregister():
     if request.method == 'POST':
@@ -157,17 +196,52 @@ def plogin():
             db.politicians.update({"username" : user_login["username"]},{"$set":{"session_id" : sess_id}})
             return sess_id
         return "Fail"
+@application.route('/api/v1/firebase', methods=['POST'])
+def firebase():
+
+    if request.method == 'POST':
+        user_info = request.form.to_dict()
+
+        auth_token = str(user_info["auth_token"])
+        try:
+            decoded_token = auth.verify_id_token(auth_token)
+        except ValueError:
+            return "Fail"
+        uid = decoded_token['uid']
+        # username = auth
+
+        username = str(auth.get_user(uid).display_name)
+        user_match = db.usrs.find_one({
+            "username" : username
+        })
+
+        if(user_match == None):
+            return "Fail"
+        db.usrs.update({"username":username},{"$set":{
+            "firebase_id" : user_info["firebase_id"],
+        }})
+        return "Success!"
 @application.route('/api/v1/user_profile', methods=['POST'])
 def user_profile():
 
     if request.method == 'POST':
         user_info = request.form.to_dict()
+
+        auth_token = str(user_info["auth_token"])
+        try:
+            decoded_token = auth.verify_id_token(auth_token)
+        except ValueError:
+            return "Fail"
+        uid = decoded_token['uid']
+        # username = auth
+
+        username = str(auth.get_user(uid).display_name)
         user_match = db.usrs.find_one({
-            "hash_f": user_info["auth_token"]
+            "username" : username
         })
-        if(user_match["hash_f"] != user_info["auth_token"]):
-            return "auth failed"
-        username = user_match["username"]
+
+        if(user_match == None):
+            return "Fail"
         db.usrs.update({"username":username},{"$set":{
             "gender" : user_info["gender"].lower(),
             "age" : user_info["age"].lower(),
@@ -194,7 +268,23 @@ def user_profile():
 def dashboard():
     if request.method == 'GET':
         sess_token = request.args.get("auth_token")
-        ids = db.usrs.find_one({"hash_f": sess_token})["polls"]
+
+        auth_token = str(sess_token)
+        try:
+            decoded_token = auth.verify_id_token(auth_token)
+        except ValueError:
+            return "Fail"
+        uid = decoded_token['uid']
+        # username = auth
+
+        username = str(auth.get_user(uid).display_name)
+        user_match = db.usrs.find_one({
+            "username" : username
+        })
+
+        if(user_match == None):
+            return "Fail"
+        ids = db.usrs.find_one({"session_id": sess_token})["polls"]
         print("dashboard", ids)
         rese = []
         for i in ids:
@@ -206,6 +296,22 @@ def dashboard():
 def getpoll():
     if request.method == 'GET':
         sess_token = request.args.get("auth_token")
+
+        auth_token = str(sess_token)
+        try:
+            decoded_token = auth.verify_id_token(auth_token)
+        except ValueError:
+            return "Fail"
+        uid = decoded_token['uid']
+        # username = auth
+
+        username = str(auth.get_user(uid).display_name)
+        user_match = db.usrs.find_one({
+            "username" : username
+        })
+
+        if(user_match == None):
+            return "Fail"
         _id = request.args.get("poll_id")
         print(_id)
         pl = db.polls.find_one({"_id": ObjectId(_id)})
@@ -213,7 +319,7 @@ def getpoll():
         # return jsonify(pl)
         pl["_id"] = str(ObjectId(_id))
         return str(pl)
-    return "false"
+    return "Fail"
 
 @application.route('/api/v1/answer',methods=['POST'])
 def answer():
@@ -221,7 +327,23 @@ def answer():
         user_info = request.form.to_dict()
         _id = user_info["poll_id"]
         answer = user_info["answer"]
-        username = db.usrs.find_one({"hash_f":user_info["auth_token"]})["username"]
+
+        auth_token = str(user_info["auth_token"])
+        try:
+            decoded_token = auth.verify_id_token(auth_token)
+        except ValueError:
+            return "Fail"
+        uid = decoded_token['uid']
+        # username = auth
+
+        username = str(auth.get_user(uid).display_name)
+        user_match = db.usrs.find_one({
+            "username" : username
+        })
+
+        if(user_match == None):
+            return "Fail"
+        username = db.usrs.find_one({"session_id":auth_token})["username"]
         db.responses.insert_one({
             "username": username,
             "answer": answer,
@@ -254,11 +376,12 @@ def pquestion():
             str(user_info["demographic"]): user_info["filter"],
         },{"$push":{"polls":_id}})
         for i in db.usrs.find({"polls":_id}):
-            notif = i["firebase_id"]
-            registration_id = notif
-            message_title = "Update!"
-            message_body = "Hey " + i["name"] + "! You have a new poll awaiting!," +  str(_id) + "," + user_info["question"] + "," + user_info["type"]
-            result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
+            if("firebase_id" in i):
+                notif = i["firebase_id"]
+                registration_id = notif
+                message_title = "Update!"
+                message_body = "Hey " + i["name"] + "! You have a new poll awaiting!," +  str(_id) + "," + user_info["question"] + "," + user_info["type"]
+                result = push_service.notify_single_device(registration_id=registration_id, message_title=message_title, message_body=message_body)
         return "success"
 
 @application.route('/api/v1/ppolls', methods=['POST'])
@@ -352,10 +475,23 @@ def user_profile_get():
     if(request.method == 'POST'):
         user_info = request.form.to_dict()
         ses_id = user_info['auth_token']
-        user = db.usrs.find_one({"hash_f": ses_id})
-        if(user is None):
-            return "fail"
-        print(user)
+
+        auth_token = str(ses_id)
+        try:
+            decoded_token = auth.verify_id_token(auth_token)
+        except ValueError:
+            return "Fail"
+        uid = decoded_token['uid']
+        # username = auth
+
+        username = str(auth.get_user(uid).display_name)
+        user_match = db.usrs.find_one({
+            "username" : username
+        })
+
+        if(user_match == None):
+            return "Fail"
+        user = db.usrs.find_one({"session_id": ses_id})
         responses_cnt = db.responses.count({"username":user["username"]})
         respp = {"name":user["name"],"race":user["race"],"username":user["username"],"gender":user["gender"],"age":user["age"],"district":user["district"],"income":user["income"],"pollResponse":responses_cnt}
         return jsonify(respp)
@@ -363,8 +499,25 @@ def user_profile_get():
 def responses():
     if(request.method == 'GET'):
         ses_id = request.args.get("auth_token")
-        user = db.usrs.find_one({"hash_f": ses_id})
-        username = user["username"]
+
+
+        auth_token = str(ses_id)
+        decoded_token = auth.verify_id_token(auth_token)
+        uid = -1
+        if "uid" in decoded_token.keys():
+            uid = decoded_token['uid']
+        else:
+            return "Fail"
+        # username = auth
+
+        username = str(auth.get_user(uid).display_name)
+        user_match = db.usrs.find_one({
+            "username" : username
+        })
+
+        if(user_match == None):
+            return "Fail"
+        user = db.usrs.find_one({"session_id": ses_id})
         rslts = db.responses.find({"username": username})
         lst = []
         for i in rslts:

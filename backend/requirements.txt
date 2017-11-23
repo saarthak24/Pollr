@@ -21,3 +21,17 @@ tweepy==3.5.0
 urllib3==1.22
 Werkzeug==0.12.2
 zipcode==2.0.0
+gi==1.2
+google-api-core==0.1.1
+google-auth==1.2.1
+google-cloud-core==0.28.0
+google-cloud-firestore==0.28.0
+google-cloud-storage==1.6.0
+google-gax==0.15.16
+google-resumable-media==0.3.1
+googleapis-common-protos==1.5.3
+firebase-admin==2.5.0
+DateTime==4.2
+awscli==1.11.188
+awsebcli==3.12.1
+s3transfer==0.1.11
