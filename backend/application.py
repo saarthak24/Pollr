@@ -95,13 +95,13 @@ def verify():
         date = user_verify["dob"]
         b_date = datetime.strptime(date, '%m-%d-%Y')
         age = (datetime.today() - b_date).days/365
-        db.usrs.update({"username":username},{"$set":{
+        db.usrs.update({"username":str(auth.get_user(uid).display_name)},{"$set":{
             "age": age
         }})
         if(age >= 18):
-            db.politicians.update({"username" : str(auth.get_user(uid).display_name)},{"$set":{"verified" : "true"}})
+            db.usrs.update({"username" : str(auth.get_user(uid).display_name)},{"$set":{"verified" : "true"}})
             return "Success!"
-        db.politicians.update({"username" : str(auth.get_user(uid).display_name)},{"$set":{"verified" : "false"}})
+        db.usrs.update({"username" : str(auth.get_user(uid).display_name)},{"$set":{"verified" : "false"}})
         return "Fail"
 
         # hash_f = hashlib.md5((str(user_register["firebase_id"]) + str(user_register["username"])  + "pollr").encode("utf-8"))
