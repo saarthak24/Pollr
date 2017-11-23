@@ -92,14 +92,13 @@ def verify():
             return "Fail"
         uid = decoded_token['uid']
         date = user_verify["dob"]
-        b_date = datetime.strptime(date, '%m:%d:%Y')
+        b_date = datetime.strptime(date, '%m-%d-%Y')
         age = (datetime.today() - b_date).days/365
         if(age >= 18):
             return "Success!"
         return "Fail"
 
         # hash_f = hashlib.md5((str(user_register["firebase_id"]) + str(user_register["username"])  + "pollr").encode("utf-8"))
-        MM-DD-YYYY
 
     return "Success!"
 
