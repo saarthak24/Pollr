@@ -138,7 +138,7 @@ PyScreeze==0.1.9
 python-dateutil==2.6.0
 PyTweening==1.0.3
 pytz==2016.10
-PyYAML==3.12
+PyYAML==5.4
 rake-nltk==1.0.1
 requests==2.9.1
 requests-oauthlib==0.8.0
