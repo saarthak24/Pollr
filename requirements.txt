@@ -57,7 +57,7 @@ PyAudio==0.2.11
 PyAutoGUI==0.9.33
 pyfcm==1.4.3
 pyglet==1.2.4
-Pygments==2.2.0
+Pygments==2.7.4
 pymavlink==2.0.6
 pymongo==3.5.1
 PyMsgBox==1.0.3
