@@ -42,7 +42,7 @@ matplotlib==2.0.0
 monotonic==1.2
 networkx==1.11
 nltk==3.2.2
-numpy==1.12.1
+numpy==1.21.0
 oauthlib==2.0.6
 olefile==0.44
 packaging==16.8
